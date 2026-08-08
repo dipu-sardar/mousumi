@@ -233,6 +233,19 @@ export function buildViewModel(state, actions) {
     stepPickup: s.orderStep === 2,
     stepPay: s.orderStep === 3,
 
+    measureMethods: [
+      { key: "saved", label: "USE A SAVED PROFILE" },
+      { key: "manual", label: "ENTER MEASUREMENTS MYSELF" },
+      { key: "home", label: "MEASURE ME AT HOME" },
+    ].map((m) => ({
+      ...m,
+      onClick: () => setState({ measureMethod: m.key }),
+      style: chip(s.measureMethod === m.key),
+    })),
+    measureBySaved: s.measureMethod === "saved",
+    measureManual: s.measureMethod === "manual",
+    measureAtHome: s.measureMethod === "home",
+
     measureFields: FIELDS.map((f) => ({
       label: f.label,
       value: s.m[f.k],

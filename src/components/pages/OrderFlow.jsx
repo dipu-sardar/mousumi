@@ -6,6 +6,9 @@ export default function OrderFlow() {
     stepMeasure,
     stepPickup,
     stepPay,
+    measureMethods,
+    measureBySaved,
+    measureAtHome,
     savedProfiles,
     newProfile,
     goHow,
@@ -44,55 +47,87 @@ export default function OrderFlow() {
           {stepMeasure && (
             <div style={{ animation: "msFadeUp .45s cubic-bezier(0.22,1,0.36,1) both" }}>
               <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "38px", fontWeight: 800, letterSpacing: "-1.4px", margin: "0 0 8px" }}>MEASUREMENTS</h2>
-              <p style={{ fontSize: "14px", color: "#6A6A64", margin: "0 0 26px", maxWidth: "520px", lineHeight: 1.65 }}>Pick a saved profile, or take fresh measurements with the guide. Saved profiles are reused on every future order.</p>
+              <p style={{ fontSize: "14px", color: "#6A6A64", margin: "0 0 22px", maxWidth: "520px", lineHeight: 1.65 }}>Pick a saved profile, take fresh measurements with the guide, or let our staff measure you at home.</p>
 
-              <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.6px", color: "#9A9A92", marginBottom: "12px" }}>SAVED PROFILES</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: "14px", marginBottom: "32px" }}>
-                {savedProfiles.map((p) => (
-                  <div key={p.id} onClick={p.onClick} style={p.style}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
-                      <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "14px", fontWeight: 700 }}>{p.name}</div>
-                      {p.selected && (
-                        <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#181818", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </div>
-                      )}
+              <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.6px", color: "#9A9A92", marginBottom: "12px" }}>HOW WOULD YOU LIKE TO GIVE YOUR MEASUREMENTS?</div>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
+                {measureMethods.map((m) => (
+                  <div key={m.key} onClick={m.onClick} style={m.style}>
+                    {m.label}
+                  </div>
+                ))}
+              </div>
+
+              {measureAtHome ? (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "22px", padding: "26px", maxWidth: "620px" }}>
+                  <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "#F3E6F0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A3B63" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "15px", fontWeight: 700, marginBottom: "8px" }}>Our staff will measure you at home</div>
+                    <div style={{ fontSize: "13px", color: "#6A6A64", lineHeight: 1.7 }}>
+                      A female staff member will take your measurements in person when she visits for fabric pickup — no need to fill anything in now. Just confirm your pickup slot and address on the next step.
                     </div>
-                    <div style={{ fontSize: "12px", color: "#9A9A92", marginTop: "8px", lineHeight: 1.6 }}>{p.summary}</div>
-                    <div style={{ fontSize: "11px", color: "#B5B5AD", marginTop: "8px" }}>{p.updated}</div>
                   </div>
-                ))}
-                <div onClick={newProfile} className="hv-border-dark-bg-tint" style={{ border: "1px dashed #CFCFC6", borderRadius: "18px", padding: "18px", display: "flex", flexDirection: "column", justifyContent: "center", gap: "6px", cursor: "pointer", transition: "all .25s ease" }}>
-                  <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "14px", fontWeight: 700 }}>+ New profile</div>
-                  <div style={{ fontSize: "12px", color: "#9A9A92" }}>Take fresh measurements</div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {measureBySaved && (
+                    <>
+                      <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.6px", color: "#9A9A92", marginBottom: "12px" }}>SAVED PROFILES</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: "14px", marginBottom: "32px" }}>
+                        {savedProfiles.map((p) => (
+                          <div key={p.id} onClick={p.onClick} style={p.style}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                              <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "14px", fontWeight: 700 }}>{p.name}</div>
+                              {p.selected && (
+                                <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#181818", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "#9A9A92", marginTop: "8px", lineHeight: 1.6 }}>{p.summary}</div>
+                            <div style={{ fontSize: "11px", color: "#B5B5AD", marginTop: "8px" }}>{p.updated}</div>
+                          </div>
+                        ))}
+                        <div onClick={newProfile} className="hv-border-dark-bg-tint" style={{ border: "1px dashed #CFCFC6", borderRadius: "18px", padding: "18px", display: "flex", flexDirection: "column", justifyContent: "center", gap: "6px", cursor: "pointer", transition: "all .25s ease" }}>
+                          <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "14px", fontWeight: 700 }}>+ New profile</div>
+                          <div style={{ fontSize: "12px", color: "#9A9A92" }}>Take fresh measurements</div>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", marginBottom: "14px" }}>
-                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.6px", color: "#9A9A92" }}>MEASUREMENT SHEET (INCHES)</div>
-                <div onClick={goHow} className="hv-fade-70" style={{ display: "flex", alignItems: "center", gap: "8px", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.2px", color: "#D32F4D", cursor: "pointer" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                  <span>WATCH VIDEO GUIDE</span>
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "14px", background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "22px", padding: "22px" }}>
-                {measureFields.map((m) => (
-                  <div key={m.label}>
-                    <div style={{ fontSize: "11.5px", letterSpacing: "0.6px", color: "#9A9A92", marginBottom: "7px" }}>{m.label}</div>
-                    <input
-                      value={m.value}
-                      onChange={m.onChange}
-                      placeholder="0.0"
-                      className="fc-border-dark-bg-white"
-                      style={{ width: "100%", padding: "12px 14px", borderRadius: "12px", border: "1px solid #E8E8E2", background: "#F9F9F7", fontSize: "14px", fontWeight: 600, outline: "none", color: "#181818" }}
-                    />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", marginBottom: "14px" }}>
+                    <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.6px", color: "#9A9A92" }}>MEASUREMENT SHEET (INCHES)</div>
+                    <div onClick={goHow} className="hv-fade-70" style={{ display: "flex", alignItems: "center", gap: "8px", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.2px", color: "#D32F4D", cursor: "pointer" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                      <span>WATCH VIDEO GUIDE</span>
+                    </div>
                   </div>
-                ))}
-              </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "14px", background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "22px", padding: "22px" }}>
+                    {measureFields.map((m) => (
+                      <div key={m.label}>
+                        <div style={{ fontSize: "11.5px", letterSpacing: "0.6px", color: "#9A9A92", marginBottom: "7px" }}>{m.label}</div>
+                        <input
+                          value={m.value}
+                          onChange={m.onChange}
+                          placeholder="0.0"
+                          className="fc-border-dark-bg-white"
+                          style={{ width: "100%", padding: "12px 14px", borderRadius: "12px", border: "1px solid #E8E8E2", background: "#F9F9F7", fontSize: "14px", fontWeight: 600, outline: "none", color: "#181818" }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
 

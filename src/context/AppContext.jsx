@@ -24,6 +24,7 @@ const initialState = {
   prevIdx: null,
 
   orderStep: 1,
+  measureMethod: "saved", // "saved" | "manual" | "home"
   slot: "Morning",
   day: "Today",
 
