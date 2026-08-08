@@ -99,7 +99,15 @@ export default function OrderFlow() {
           {stepPickup && (
             <div style={{ animation: "msFadeUp .45s cubic-bezier(0.22,1,0.36,1) both" }}>
               <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "38px", fontWeight: 800, letterSpacing: "-1.4px", margin: "0 0 8px" }}>PICKUP SLOT</h2>
-              <p style={{ fontSize: "14px", color: "#6A6A64", margin: "0 0 26px", maxWidth: "520px", lineHeight: 1.65 }}>Choose when our rider should collect your fabric. Delivery of the finished dress follows the same slot.</p>
+              <p style={{ fontSize: "14px", color: "#6A6A64", margin: "0 0 16px", maxWidth: "520px", lineHeight: 1.65 }}>Choose when our rider should collect your fabric. Delivery of the finished dress follows the same slot.</p>
+
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "9px 18px", borderRadius: "30px", background: "#F3E6F0", color: "#7A3B63", fontSize: "12.5px", fontWeight: 600, margin: "0 0 26px", maxWidth: "520px", textAlign: "left" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Measurements and fabric pickup at your home are handled by a female staff member.</span>
+              </div>
 
               <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.6px", color: "#9A9A92", marginBottom: "12px" }}>DAY</div>
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
@@ -231,6 +239,8 @@ export default function OrderFlow() {
             Free alterations for 3 months.
             <br />
             Rider collects the fabric from your door.
+            <br />
+            Home visits are handled by female staff.
           </div>
         </div>
       </div>

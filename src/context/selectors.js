@@ -170,7 +170,7 @@ export function buildViewModel(state, actions) {
       onClick: () => goToDesignIdx(i),
       style: { height: "5px", borderRadius: "6px", cursor: "pointer", transition: "all .4s cubic-bezier(0.22,1,0.36,1)", width: i === s.homeIdx ? "26px" : "10px", background: i === s.homeIdx ? "#D32F4D" : "#DDDDD5" },
     })),
-    trustPills: [{ label: "3 months free alteration" }, { label: "Doorstep pickup" }, { label: "bKash · Nagad · Rocket" }],
+    trustPills: [{ label: "3 months free alteration" }, { label: "Doorstep pickup" }, { label: "Female staff for home visits" }, { label: "bKash · Nagad · Rocket" }],
     homeSteps: [
       { n: "1", t: "Pick a design & slot" },
       { n: "2", t: "Rider collects fabric" },
