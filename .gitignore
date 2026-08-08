@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Editor / OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vite
+.vite/
+*.local
+
+# Original design-tool export this project was built from, and scratch
+# uploads/screenshots — kept on disk for reference, not tracked here.
+# The media it contains that the app actually uses already lives in
+# public/assets/.
+/implement/
+/uploads/
+/.thumbnail

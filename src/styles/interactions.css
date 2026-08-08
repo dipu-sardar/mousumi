@@ -1,0 +1,107 @@
+/*
+ * Hover / focus utility classes.
+ *
+ * The original design tool compiled each `style-hover="…"` attribute into a
+ * scoped `:hover` rule with `!important` (so it could always win over the
+ * element's own inline base style). We keep that same mechanism here as a
+ * small, named set of reusable classes instead of one generated class per
+ * element — same visual result, easier to read and maintain.
+ *
+ * Naming: hv- = :hover, fc- = :focus.
+ */
+
+.hv-fade-60:hover {
+  opacity: 0.6 !important;
+}
+.hv-fade-70:hover {
+  opacity: 0.7 !important;
+}
+.hv-fade-75:hover {
+  opacity: 0.75 !important;
+}
+
+.hv-text-accent:hover {
+  color: var(--ms-accent) !important;
+}
+.hv-text-border-accent:hover {
+  color: var(--ms-accent) !important;
+  border-color: var(--ms-accent) !important;
+}
+
+.hv-border-dark:hover {
+  border-color: var(--ms-ink) !important;
+}
+.hv-border-dark-lift-2:hover {
+  border-color: var(--ms-ink) !important;
+  transform: translateY(-2px) !important;
+}
+.hv-border-dark-lift-3:hover {
+  border-color: var(--ms-ink) !important;
+  transform: translateY(-3px) !important;
+}
+.hv-border-dark-bg-tint:hover {
+  border-color: var(--ms-ink) !important;
+  background: #f3f3ef !important;
+}
+
+.hv-bg-accent:hover {
+  background: var(--ms-accent) !important;
+}
+.hv-bg-accent-lift-2:hover {
+  background: var(--ms-accent) !important;
+  transform: translateY(-2px) !important;
+}
+.hv-bg-accent-lift-3:hover {
+  background: var(--ms-accent) !important;
+  transform: translateY(-3px) !important;
+}
+.hv-bg-tint:hover {
+  background: #f0f0ea !important;
+}
+.hv-fill-dark:hover {
+  background: var(--ms-ink) !important;
+  color: #fff !important;
+  border-color: var(--ms-ink) !important;
+}
+
+.hv-lift-2:hover {
+  transform: translateY(-2px) !important;
+}
+.hv-lift-5:hover {
+  transform: translateY(-5px) !important;
+}
+.hv-lift-5-border-dark:hover {
+  transform: translateY(-5px) !important;
+  border-color: var(--ms-ink) !important;
+}
+.hv-lift-3-shadow-accent:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 18px 38px rgba(211, 47, 77, 0.36) !important;
+}
+
+.hv-scale-105:hover {
+  transform: scale(1.05) !important;
+}
+.hv-scale-106:hover {
+  transform: scale(1.06) !important;
+}
+.hv-scale-114:hover {
+  transform: scale(1.14) !important;
+}
+
+.hv-menu-link:hover {
+  transform: translateX(12px) !important;
+  color: var(--ms-accent) !important;
+}
+.hv-next-arrow:hover {
+  transform: scale(1.16) translateX(3px) !important;
+  background: var(--ms-accent) !important;
+}
+
+.fc-border-dark:focus {
+  border-color: var(--ms-ink) !important;
+}
+.fc-border-dark-bg-white:focus {
+  border-color: var(--ms-ink) !important;
+  background: #ffffff !important;
+}

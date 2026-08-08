@@ -1,0 +1,245 @@
+/*
+ * Global baseline — fonts, reset, scrollbar and the app's keyframe library.
+ * Ported 1:1 from the original design (implement/MOUSUMI Tailoring.dc.html)
+ * so every animation keeps its exact timing and easing.
+ */
+
+:root {
+  --ms-bg: #f9f9f7;
+  --ms-ink: #181818;
+  --ms-accent: #d32f4d;
+  --ms-muted: #6a6a64;
+  --ms-faint: #9a9a92;
+  --ms-border: #e8e8e2;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--ms-bg);
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  color: var(--ms-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--ms-ink);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--ms-accent);
+}
+
+input,
+textarea {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #e0e0d8;
+  border-radius: 8px;
+}
+
+/* ---------- Keyframe library ---------- */
+
+@keyframes msFloat {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-12px) rotate(6deg);
+  }
+}
+@keyframes msFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes msFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes msRise {
+  0% {
+    opacity: 0;
+    transform: translateY(38px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes msRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 24, 24, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 18px rgba(24, 24, 24, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(24, 24, 24, 0);
+  }
+}
+@keyframes msMarquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+@keyframes msToast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  88% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+}
+@keyframes msDrawer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+@keyframes msPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes msHeroInA {
+  0% {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes msHeroInB {
+  0% {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes msHeroOutA {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+}
+@keyframes msHeroOutB {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+}
+@keyframes msTextInA {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes msTextInB {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Print receipt ---------- */
+
+#ms-receipt {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  #root,
+  #ms-app-root {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  #ms-app {
+    display: none !important;
+  }
+  #ms-receipt {
+    display: block !important;
+  }
+}
