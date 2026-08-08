@@ -25,7 +25,13 @@ export default function HowItWorks() {
             <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#D9D9D1" }} />
             <div style={{ marginLeft: "12px", fontFamily: "Outfit,sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "1.4px", color: "#9A9A92" }}>MOUSUMI — PLATFORM WALKTHROUGH</div>
           </div>
-          <video src="/assets/mousumi.mp4" autoPlay muted loop playsInline controls style={{ display: "block", width: "100%", aspectRatio: "16/10", objectFit: "cover", background: "#151513" }} />
+          <iframe
+            src="https://www.youtube.com/embed/VSPe-qgIWUk"
+            title="MOUSUMI — platform walkthrough"
+            style={{ display: "block", width: "100%", aspectRatio: "16/10", border: "none", background: "#151513" }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
         </div>
       </div>
 

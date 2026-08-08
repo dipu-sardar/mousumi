@@ -19,7 +19,7 @@ import { BUDGETS, CATS, DESIGNS, FIELDS, HOW_STEPS, OFFERS, RATING_BARS, REVIEWS
  */
 export function buildViewModel(state, actions) {
   const s = state;
-  const { go, flash, goToDesignIdx, nextHome, chip, card, setState } = actions;
+  const { go, flash, chip, card, setState } = actions;
 
   const byId = (id) => DESIGNS.find((d) => d.id === id) || DESIGNS[0];
 
@@ -39,22 +39,8 @@ export function buildViewModel(state, actions) {
     open: () => go("design", d.id),
   });
 
-  const ab = s.homeIdx % 2 === 0 ? "A" : "B";
-  const prev = s.prevIdx;
-  const heroBase = {
-    position: "absolute",
-    inset: 0,
-    borderRadius: "190px 190px 26px 26px",
-    overflow: "hidden",
-    boxShadow: "0 26px 60px rgba(0,0,0,0.12)",
-    backgroundColor: "#EAEAE8",
-    backgroundPosition: "50% 18%",
-    backgroundSize: "cover",
-    backgroundRepeat: "no-repeat",
-  };
-  const home = deco(DESIGNS[s.homeIdx]);
-  const nextDesign = deco(DESIGNS[(s.homeIdx + 1) % DESIGNS.length]);
   const design = deco(byId(s.designId));
+  const identityDesign = deco(DESIGNS[0]); // the real-photo product the home hero shows off
   const budget = BUDGETS.find((b) => b.label === s.budget) || BUDGETS[0];
   const activeProfile = s.profiles.find((p) => p.id === s.profileId);
   const activeAddr = s.addresses.find((a) => a.id === s.addressId);
@@ -155,27 +141,19 @@ export function buildViewModel(state, actions) {
       { label: "My account", p: "account" },
     ].map((m) => ({ label: m.label, onClick: () => go(m.p) })),
 
-    // ---------------- home ----------------
-    home: { ...home, turnaround: home.days + " day turnaround", counter: "0" + (s.homeIdx + 1) + " / " + (DESIGNS.length < 10 ? "0" : "") + DESIGNS.length },
-    nextHome: { ...nextDesign, bannerStyle: { position: "absolute", inset: 0, backgroundPosition: "50% 15%", backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundImage: `url(${nextDesign.img})`, transition: "transform .6s cubic-bezier(0.22,1,0.36,1)", animation: "msFadeIn .6s ease both" } },
-    nextTextStyle: { position: "absolute", left: 0, right: 0, bottom: 0, padding: "24px 16px 18px", background: "linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0))", animation: "msFadeIn .4s ease both" },
-    openHomeDesign: () => go("design", DESIGNS[s.homeIdx].id),
-    nextHomeDesign: () => nextHome(),
-    swapping: s.swap && prev !== null,
-    homeHeroStyle: { ...heroBase, backgroundImage: `url(${home.img})`, zIndex: 6, animation: `msHeroIn${ab} .45s ease-out both` },
-    prevHeroStyle: { ...heroBase, backgroundImage: `url(${prev !== null ? DESIGNS[prev].img : home.img})`, zIndex: 5, animation: `msHeroOut${ab} .35s ease-in both` },
-    circleStyle: { position: "absolute", width: "min(520px, 74%)", aspectRatio: "1/1", borderRadius: "50%", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 1, backgroundColor: home.tone, transition: "background-color .45s ease" },
-    featuredStyle: { animation: `msTextIn${ab} .4s ease-out both` },
-    homeDots: DESIGNS.map((d, i) => ({
-      onClick: () => goToDesignIdx(i),
-      style: { height: "5px", borderRadius: "6px", cursor: "pointer", transition: "all .4s cubic-bezier(0.22,1,0.36,1)", width: i === s.homeIdx ? "26px" : "10px", background: i === s.homeIdx ? "#D32F4D" : "#DDDDD5" },
-    })),
+    // ---------------- home (brand hero — no product carousel here on purpose) ----------------
+    identityDesign,
+    identityPhotoStyle: {
+      position: "absolute",
+      inset: 0,
+      borderRadius: "26px",
+      backgroundImage: `url(${identityDesign.img})`,
+      backgroundPosition: "50% 25%",
+      backgroundSize: "cover",
+      backgroundRepeat: "no-repeat",
+    },
+    goIdentityDesign: () => go("design", identityDesign.id),
     trustPills: [{ label: "3 months free alteration" }, { label: "Doorstep pickup" }, { label: "Female staff for home visits" }, { label: "bKash · Nagad · Rocket" }],
-    homeSteps: [
-      { n: "1", t: "Pick a design & slot" },
-      { n: "2", t: "Rider collects fabric" },
-      { n: "3", t: "Stitched dress delivered" },
-    ],
 
     // ---------------- catalogue ----------------
     cat: s.cat === "ALL" ? "ALL DESIGNS" : s.cat,
@@ -186,7 +164,7 @@ export function buildViewModel(state, actions) {
 
     // ---------------- design detail ----------------
     design,
-    designImageStyle: { position: "relative", zIndex: 5, width: "min(330px, 62%)", height: "82%", alignSelf: "center", borderRadius: "185px 185px 26px 26px", overflow: "hidden", boxShadow: "0 26px 60px rgba(0,0,0,0.12)", backgroundColor: "#EAEAE8", backgroundPosition: "50% 18%", backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundImage: `url(${view})` },
+    designImageStyle: { position: "relative", zIndex: 5, width: "min(330px, 62%)", height: "82%", alignSelf: "center", borderRadius: "26px", overflow: "hidden", boxShadow: "0 26px 60px rgba(0,0,0,0.12)", backgroundPosition: "50% 50%", backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundImage: `url(${view})` },
     designCircleStyle: { position: "absolute", width: "min(480px, 70%)", aspectRatio: "1/1", borderRadius: "50%", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 1, transition: "background-color .5s ease", backgroundColor: design.tone },
     designThumbs: design.gallery.map((src, i) => ({
       onClick: () => setState({ viewIdx: i }),

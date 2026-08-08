@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { DESIGNS, FIELDS } from "../data/catalog.js";
+import { FIELDS } from "../data/catalog.js";
 import { buildViewModel } from "./selectors.js";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 import { mapCustomerToAccount, makeReferralCode } from "../lib/customerMapper.js";
@@ -20,12 +20,10 @@ const AppContext = createContext(null);
 const initialState = {
   page: "home",
   designId: "d1",
-  homeIdx: 0,
   viewIdx: 0,
   cat: "ALL",
   budget: "ALL",
   fabric: "Cotton",
-  prevIdx: null,
 
   orderStep: 1,
   measureMethod: "saved", // "saved" | "manual" | "home"
@@ -90,7 +88,6 @@ const initialState = {
   searchOpen: false,
   query: "",
   toast: "",
-  swap: false,
 
   m: { length: "40.0", shoulder: "14.5", bust: "36.0", waist: "30.0", hip: "38.0", sleeve: "22.0", armhole: "16.0", neckDepth: "7.0" },
 };
@@ -112,8 +109,6 @@ export function AppProvider({ children }) {
   // Instance-level data that isn't part of the render tree — mirrors the
   // plain (non-`state`) instance fields on the original class.
   const toastTimer = useRef(null);
-  const swapTimer = useRef(null);
-  const swappingRef = useRef(false);
   const scrollRef = useRef(null);
 
   // On mount: if a Supabase session already exists (the browser was logged
@@ -151,7 +146,6 @@ export function AppProvider({ children }) {
   useEffect(() => {
     return () => {
       clearTimeout(toastTimer.current);
-      clearTimeout(swapTimer.current);
     };
   }, []);
 
@@ -169,19 +163,6 @@ export function AppProvider({ children }) {
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setState({ toast: "" }), 2200);
   };
-
-  const goToDesignIdx = (i) => {
-    if (swappingRef.current || i === state.homeIdx) return;
-    swappingRef.current = true;
-    setState((s) => ({ prevIdx: s.homeIdx, homeIdx: i, swap: true }));
-    clearTimeout(swapTimer.current);
-    swapTimer.current = setTimeout(() => {
-      setState({ swap: false, prevIdx: null });
-      swappingRef.current = false;
-    }, 430);
-  };
-
-  const nextHome = () => goToDesignIdx((state.homeIdx + 1) % DESIGNS.length);
 
   const today = () => "Updated " + new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
@@ -360,8 +341,6 @@ export function AppProvider({ children }) {
     setState,
     go,
     flash,
-    goToDesignIdx,
-    nextHome,
     today,
     openAuth,
     sendOtp,
