@@ -12,6 +12,13 @@ export default function OrderDone() {
       </div>
       <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "50px", fontWeight: 800, letterSpacing: "-1.8px", margin: 0 }}>ORDER CONFIRMED</h2>
       <p style={{ fontSize: "15px", color: "#6A6A64", margin: "16px 0 8px", maxWidth: "460px", lineHeight: 1.7 }}>Order {orderId} is placed. Our rider will collect your fabric in the chosen slot, and you can follow every stage live.</p>
+      <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "9px 18px", borderRadius: "30px", background: "#F3E6F0", color: "#7A3B63", fontSize: "12.5px", fontWeight: 600, margin: "6px 0 20px", maxWidth: "460px", textAlign: "left" }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span>Measurements and fabric pickup at your home are handled by a female staff member.</span>
+      </div>
       <div style={{ fontSize: "13px", color: "#9A9A92", marginBottom: "28px" }}>{trackSummary}</div>
       <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
         <div onClick={trackThisOrder} className="hv-bg-accent" style={{ padding: "16px 32px", borderRadius: "40px", background: "#181818", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: "pointer" }}>
