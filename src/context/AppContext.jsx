@@ -1,17 +1,21 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { DESIGNS, FIELDS } from "../data/catalog.js";
 import { buildViewModel } from "./selectors.js";
+import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
+import { mapCustomerToAccount, makeReferralCode } from "../lib/customerMapper.js";
 
 const AppContext = createContext(null);
 
 /**
  * Initial application state.
  *
- * This is a demo data set (one signed-in customer, "Rumana Akter", with a
- * couple of saved measurement profiles/addresses and order history) exactly
- * as shipped in the original prototype — there is no backend yet, so
- * everything here lives in memory for the session. See README.md for what
- * plugging in a real backend would touch.
+ * `account`/`profiles`/`addresses`/`cart` start out as the same demo data
+ * ("Rumana Akter") the original prototype shipped with — that's what a
+ * guest (not logged in) sees while browsing. Logging in for real (email
+ * OTP via Supabase, see the auth actions below) replaces `account` with
+ * the signed-in customer's real row and clears `profiles`/`addresses` to
+ * match what's actually saved for them (still nothing, until that CRUD is
+ * wired up next — see supabase/README.md).
  */
 const initialState = {
   page: "home",
@@ -63,12 +67,12 @@ const initialState = {
 
   authed: false,
   authOpen: false,
-  authStep: "phone",
-  authPhone: "",
+  authBusy: false,
+  authStep: "email", // "email" | "otp" | "name"
+  authEmail: "",
   authOtp: "",
   authName: "",
   authError: "",
-  authMode: "login",
   authNext: "",
 
   pay: "bKash",
@@ -107,33 +111,34 @@ export function AppProvider({ children }) {
 
   // Instance-level data that isn't part of the render tree — mirrors the
   // plain (non-`state`) instance fields on the original class.
-  const accountsRef = useRef({}); // phone digits -> {account, profiles, profileId, addresses, addressId}
   const toastTimer = useRef(null);
   const swapTimer = useRef(null);
   const swappingRef = useRef(false);
   const scrollRef = useRef(null);
 
-  const snapshot = () => {
-    const s = state;
-    return {
-      account: { ...s.account },
-      profiles: s.profiles.map((p) => ({ ...p })),
-      profileId: s.profileId,
-      addresses: s.addresses.map((a) => ({ ...a })),
-      addressId: s.addressId,
-    };
-  };
-
-  const stash = () => {
-    const s = state;
-    if (s.account && s.account.phone) {
-      accountsRef.current[s.account.phone.replace(/[^0-9]/g, "")] = snapshot();
-    }
-  };
-
-  // Stash the demo account once on mount, same as componentDidMount().
+  // On mount: if a Supabase session already exists (the browser was logged
+  // in before this page load — supabase-js persists sessions itself), and
+  // that session has a matching `customers` row, restore the logged-in
+  // state automatically. This is what makes login survive a page refresh,
+  // unlike the original demo's pure-in-memory session.
   useEffect(() => {
-    stash();
+    if (!isSupabaseConfigured) return;
+    let cancelled = false;
+
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session || cancelled) return;
+      const { data: row } = await supabase.from("customers").select("*").eq("auth_user_id", session.user.id).maybeSingle();
+      if (row && !cancelled) {
+        setState({ authed: true, account: mapCustomerToAccount(row), profiles: [], profileId: "", addresses: [], addressId: "" });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -180,81 +185,100 @@ export function AppProvider({ children }) {
 
   const today = () => "Updated " + new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-  const openAuth = (mode, next) => {
-    setState({ authOpen: true, authMode: mode || "login", authStep: "phone", authPhone: "", authOtp: "", authName: "", authError: "", authNext: next || "" });
+  const openAuth = (next) => {
+    setState({ authOpen: true, authStep: "email", authEmail: "", authOtp: "", authName: "", authError: "", authNext: next || "" });
   };
 
-  const sendOtp = () => {
-    const p = (state.authPhone || "").replace(/[^0-9]/g, "");
-    if (p.length < 11) {
-      setState({ authError: "Enter an 11-digit mobile number, e.g. 01712000000." });
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const sendOtp = async () => {
+    const email = (state.authEmail || "").trim();
+    if (!EMAIL_RE.test(email)) {
+      setState({ authError: "Enter a valid email address." });
       return;
     }
-    const known = p === "01712000000";
-    setState({ authStep: "otp", authError: "", authMode: known ? "login" : "register" });
-    flash("OTP SENT TO " + p);
+    if (!isSupabaseConfigured) {
+      setState({ authError: "The backend isn't connected yet — ask the site owner to finish setup." });
+      return;
+    }
+    setState({ authBusy: true, authError: "" });
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    if (error) {
+      setState({ authBusy: false, authError: error.message });
+      return;
+    }
+    setState({ authBusy: false, authStep: "otp", authError: "" });
+    flash("CODE SENT TO " + email.toUpperCase());
   };
 
-  const finishAuth = () => {
-    const s = state;
-    const phone = (s.authPhone || "").replace(/[^0-9]/g, "");
-    const pretty = phone.slice(0, 5) + "-" + phone.slice(5);
-    if (s.authMode === "register") {
-      const name = (s.authName || "").trim();
-      if (!name) {
-        setState({ authError: "Please enter your name." });
-        return;
-      }
-      stash();
-      setState({
-        authed: true,
-        authOpen: false,
-        authError: "",
-        account: {
-          name,
-          phone: pretty,
-          email: "",
-          whatsapp: pretty,
-          gender: "",
-          dob: "",
-          city: "Barishal",
-          joined: "Member since " + new Date().toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
-          language: "Bangla",
-          referral: (name.split(" ")[0] || "MSM").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 8) + "200",
-        },
-        profiles: [],
-        profileId: "",
-        addresses: [],
-        addressId: "",
-        page: s.authNext || "account",
-      });
-      flash("WELCOME, " + name.toUpperCase());
-    } else {
-      const rec = accountsRef.current[phone];
-      if (rec) {
-        setState({ authed: true, authOpen: false, authError: "", account: { ...rec.account, phone: pretty }, profiles: rec.profiles, profileId: rec.profileId, addresses: rec.addresses, addressId: rec.addressId, page: s.authNext || "account" });
-      } else {
-        setState((st) => ({ authed: true, authOpen: false, authError: "", account: { ...st.account, phone: pretty }, page: st.authNext || "account" }));
-      }
+  /** Runs after a correct OTP: creates the `customers` row for a
+   *  brand-new email (once its name has been collected — see verifyOtp
+   *  below), then logs them in. Existing customers never reach this;
+   *  verifyOtp logs them straight in once their row is found. */
+  const finishAuth = async () => {
+    const name = (state.authName || "").trim();
+    if (!name) {
+      setState({ authError: "Please enter your name." });
+      return;
+    }
+    setState({ authBusy: true, authError: "" });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setState({ authBusy: false, authError: "Session expired — please start again." });
+      return;
+    }
+    const { data: row, error } = await supabase
+      .from("customers")
+      .insert({ auth_user_id: user.id, email: user.email, name, city: "Barishal", language: "Bangla", referral_code: makeReferralCode(name) })
+      .select()
+      .single();
+    setState({ authBusy: false });
+    if (error) {
+      setState({ authError: error.message });
+      return;
+    }
+    setState((st) => ({
+      authed: true,
+      authOpen: false,
+      authError: "",
+      account: mapCustomerToAccount(row),
+      profiles: [],
+      profileId: "",
+      addresses: [],
+      addressId: "",
+      page: st.authNext || "account",
+    }));
+    flash("WELCOME, " + name.toUpperCase());
+  };
+
+  const verifyOtp = async () => {
+    const email = (state.authEmail || "").trim();
+    const code = (state.authOtp || "").trim();
+    if (!code) {
+      setState({ authError: "Enter the code from your email." });
+      return;
+    }
+    setState({ authBusy: true, authError: "" });
+    const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+    if (error) {
+      setState({ authBusy: false, authError: "Wrong or expired code — please try again." });
+      return;
+    }
+    const { data: row } = await supabase.from("customers").select("*").eq("auth_user_id", data.user.id).maybeSingle();
+    setState({ authBusy: false });
+    if (row) {
+      setState((st) => ({ authed: true, authOpen: false, authError: "", account: mapCustomerToAccount(row), profiles: [], profileId: "", addresses: [], addressId: "", page: st.authNext || "account" }));
       flash("LOGGED IN");
-    }
-  };
-
-  const verifyOtp = () => {
-    const s = state;
-    if ((s.authOtp || "").trim() !== "1234") {
-      setState({ authError: "Wrong code. For this demo the code is 1234." });
-      return;
-    }
-    if (s.authMode === "register") {
+    } else {
+      // Real email confirmed, but no profile yet — one more step.
       setState({ authStep: "name", authError: "" });
-      return;
     }
-    finishAuth();
   };
 
-  const logout = () => {
-    stash();
+  const logout = async () => {
+    if (isSupabaseConfigured) await supabase.auth.signOut();
     setState({ authed: false, page: "home" });
     flash("LOGGED OUT");
   };

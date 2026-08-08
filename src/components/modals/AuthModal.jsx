@@ -1,7 +1,7 @@
 import { useApp } from "../../context/AppContext.jsx";
 
 export default function AuthModal() {
-  const { authOpen, closeAuth, authTitle, authSub, stepPhone, authPhone, onAuthPhone, sendOtp, stepOtp, authOtp, onAuthOtp, verifyOtp, backToPhone, stepName, authName, onAuthName, finishAuth, authError } = useApp();
+  const { authOpen, closeAuth, authTitle, authSub, authBusy, stepEmail, authEmail, onAuthEmail, sendOtp, stepOtp, authOtp, onAuthOtp, verifyOtp, backToEmail, stepName, authName, onAuthName, finishAuth, authError } = useApp();
   if (!authOpen) return null;
 
   return (
@@ -23,41 +23,41 @@ export default function AuthModal() {
         </div>
         <p style={{ fontSize: "13.5px", lineHeight: 1.7, color: "#6A6A64", margin: "0 0 22px" }}>{authSub}</p>
 
-        {stepPhone && (
+        {stepEmail && (
           <div>
-            <div style={{ fontSize: "11.5px", letterSpacing: "0.6px", color: "#9A9A92", marginBottom: "8px" }}>Mobile number</div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "0 16px", borderRadius: "16px", border: "1px solid #E8E8E2", background: "#FFFFFF" }}>
-              <span style={{ fontFamily: "Outfit,sans-serif", fontSize: "15px", fontWeight: 700, color: "#9A9A92" }}>+880</span>
-              <input
-                value={authPhone}
-                onChange={onAuthPhone}
-                placeholder="01712000000"
-                autoFocus
-                style={{ flex: 1, minWidth: 0, padding: "17px 0", border: "none", background: "transparent", fontFamily: "Outfit,sans-serif", fontSize: "16px", fontWeight: 700, letterSpacing: "1.4px", outline: "none", color: "#181818" }}
-              />
-            </div>
-            <div onClick={sendOtp} className="hv-lift-2" style={{ marginTop: "16px", textAlign: "center", padding: "17px 0", borderRadius: "40px", background: "#D32F4D", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: "pointer", transition: "transform .25s ease" }}>
-              SEND CODE
+            <div style={{ fontSize: "11.5px", letterSpacing: "0.6px", color: "#9A9A92", marginBottom: "8px" }}>Email address</div>
+            <input
+              value={authEmail}
+              onChange={onAuthEmail}
+              placeholder="you@example.com"
+              type="email"
+              autoFocus
+              className="fc-border-dark"
+              style={{ width: "100%", padding: "17px 20px", borderRadius: "16px", border: "1px solid #E8E8E2", background: "#FFFFFF", fontFamily: "Outfit,sans-serif", fontSize: "16px", fontWeight: 700, outline: "none", color: "#181818" }}
+            />
+            <div onClick={authBusy ? undefined : sendOtp} className="hv-lift-2" style={{ marginTop: "16px", textAlign: "center", padding: "17px 0", borderRadius: "40px", background: "#D32F4D", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: authBusy ? "default" : "pointer", opacity: authBusy ? 0.6 : 1, transition: "transform .25s ease" }}>
+              {authBusy ? "SENDING…" : "SEND CODE"}
             </div>
           </div>
         )}
 
         {stepOtp && (
           <div>
-            <div style={{ fontSize: "11.5px", letterSpacing: "0.6px", color: "#9A9A92", marginBottom: "8px" }}>4-digit code</div>
+            <div style={{ fontSize: "11.5px", letterSpacing: "0.6px", color: "#9A9A92", marginBottom: "8px" }}>Code from your email</div>
             <input
               value={authOtp}
               onChange={onAuthOtp}
-              placeholder="1234"
+              placeholder="123456"
+              maxLength={6}
               autoFocus
               className="fc-border-dark"
-              style={{ width: "100%", padding: "17px 20px", borderRadius: "16px", border: "1px solid #E8E8E2", background: "#FFFFFF", fontFamily: "Outfit,sans-serif", fontSize: "22px", fontWeight: 800, letterSpacing: "8px", textAlign: "center", outline: "none", color: "#181818" }}
+              style={{ width: "100%", padding: "17px 20px", borderRadius: "16px", border: "1px solid #E8E8E2", background: "#FFFFFF", fontFamily: "Outfit,sans-serif", fontSize: "22px", fontWeight: 800, letterSpacing: "6px", textAlign: "center", outline: "none", color: "#181818" }}
             />
-            <div onClick={verifyOtp} className="hv-lift-2" style={{ marginTop: "16px", textAlign: "center", padding: "17px 0", borderRadius: "40px", background: "#D32F4D", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: "pointer", transition: "transform .25s ease" }}>
-              VERIFY
+            <div onClick={authBusy ? undefined : verifyOtp} className="hv-lift-2" style={{ marginTop: "16px", textAlign: "center", padding: "17px 0", borderRadius: "40px", background: "#D32F4D", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: authBusy ? "default" : "pointer", opacity: authBusy ? 0.6 : 1, transition: "transform .25s ease" }}>
+              {authBusy ? "VERIFYING…" : "VERIFY"}
             </div>
-            <div onClick={backToPhone} className="hv-text-accent" style={{ marginTop: "14px", textAlign: "center", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.4px", color: "#9A9A92", cursor: "pointer" }}>
-              CHANGE NUMBER
+            <div onClick={backToEmail} className="hv-text-accent" style={{ marginTop: "14px", textAlign: "center", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.4px", color: "#9A9A92", cursor: "pointer" }}>
+              CHANGE EMAIL
             </div>
           </div>
         )}
@@ -73,15 +73,15 @@ export default function AuthModal() {
               className="fc-border-dark"
               style={{ width: "100%", padding: "17px 20px", borderRadius: "16px", border: "1px solid #E8E8E2", background: "#FFFFFF", fontSize: "16px", fontWeight: 600, outline: "none", color: "#181818" }}
             />
-            <div onClick={finishAuth} className="hv-lift-2" style={{ marginTop: "16px", textAlign: "center", padding: "17px 0", borderRadius: "40px", background: "#D32F4D", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: "pointer", transition: "transform .25s ease" }}>
-              CREATE ACCOUNT
+            <div onClick={authBusy ? undefined : finishAuth} className="hv-lift-2" style={{ marginTop: "16px", textAlign: "center", padding: "17px 0", borderRadius: "40px", background: "#D32F4D", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: authBusy ? "default" : "pointer", opacity: authBusy ? 0.6 : 1, transition: "transform .25s ease" }}>
+              {authBusy ? "SAVING…" : "CREATE ACCOUNT"}
             </div>
           </div>
         )}
 
         {authError && <div style={{ marginTop: "16px", padding: "13px 16px", borderRadius: "14px", background: "#F9E5E9", color: "#A32138", fontSize: "12.5px", lineHeight: 1.6 }}>{authError}</div>}
 
-        <div style={{ fontSize: "11.5px", color: "#B5B5AD", marginTop: "20px", lineHeight: 1.6 }}>By continuing you agree to receive order updates on this number.</div>
+        <div style={{ fontSize: "11.5px", color: "#B5B5AD", marginTop: "20px", lineHeight: 1.6 }}>By continuing you agree to receive order updates at this email.</div>
       </div>
     </div>
   );

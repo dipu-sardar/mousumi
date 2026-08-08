@@ -106,7 +106,7 @@ export function buildViewModel(state, actions) {
     trackThisOrder: () => setState({ page: "track", trackQuery: "MSM-2026-0148", trackFound: true, trackError: "", stage: 0 }),
     goAccount: () => {
       if (s.authed) go("account");
-      else actions.openAuth("login", "account");
+      else actions.openAuth("account");
     },
     goOrderMeasure: () => setState({ page: "order", orderStep: 1, menuOpen: false, searchOpen: false }),
 
@@ -195,7 +195,7 @@ export function buildViewModel(state, actions) {
     fabric: s.fabric,
     startOrder: () => {
       if (!s.authed) {
-        actions.openAuth("login", "order");
+        actions.openAuth("order");
         return;
       }
       setState({ page: "order", orderStep: 1, fromCart: false });
@@ -384,7 +384,7 @@ export function buildViewModel(state, actions) {
     cartDays: (s.cart.length ? Math.max.apply(null, s.cart.map((c) => byId(c.id).days)) : 0) + " days",
     cartCheckout: () => {
       if (!s.authed) {
-        actions.openAuth("login", "order");
+        actions.openAuth("order");
         return;
       }
       setState({ page: "order", orderStep: 1, fromCart: true });
@@ -440,26 +440,32 @@ export function buildViewModel(state, actions) {
     authed: s.authed,
     guest: !s.authed,
     authOpen: s.authOpen,
+    authBusy: s.authBusy,
     authStep: s.authStep,
-    stepPhone: s.authStep === "phone",
+    stepEmail: s.authStep === "email",
     stepOtp: s.authStep === "otp",
     stepName: s.authStep === "name",
-    authTitle: s.authStep === "phone" ? "LOG IN OR REGISTER" : s.authStep === "otp" ? "VERIFY YOUR NUMBER" : "CREATE YOUR PROFILE",
-    authSub: s.authStep === "phone" ? "Only your mobile number is needed — we send a 4-digit code to confirm it." : s.authStep === "otp" ? "We sent a 4-digit code to " + s.authPhone + ". Demo code: 1234." : "Tell us your name — measurements and addresses come later.",
-    authPhone: s.authPhone,
+    authTitle: s.authStep === "email" ? "LOG IN OR REGISTER" : s.authStep === "otp" ? "CHECK YOUR EMAIL" : "CREATE YOUR PROFILE",
+    authSub:
+      s.authStep === "email"
+        ? "Just your email — we send a code to confirm it, no password to remember."
+        : s.authStep === "otp"
+          ? "We sent a code to " + s.authEmail + ". Check your inbox (and spam folder)."
+          : "Tell us your name — measurements and addresses come later.",
+    authEmail: s.authEmail,
     authOtp: s.authOtp,
     authName: s.authName,
     authError: s.authError,
-    onAuthPhone: (e) => setState({ authPhone: e.target.value }),
+    onAuthEmail: (e) => setState({ authEmail: e.target.value }),
     onAuthOtp: (e) => setState({ authOtp: e.target.value }),
     onAuthName: (e) => setState({ authName: e.target.value }),
     sendOtp: () => actions.sendOtp(),
     verifyOtp: () => actions.verifyOtp(),
     finishAuth: () => actions.finishAuth(),
-    openLogin: () => actions.openAuth("login", "account"),
-    openRegister: () => actions.openAuth("register", "account"),
+    openLogin: () => actions.openAuth("account"),
+    openRegister: () => actions.openAuth("account"),
     closeAuth: () => setState({ authOpen: false, authError: "" }),
-    backToPhone: () => setState({ authStep: "phone", authOtp: "", authError: "" }),
+    backToEmail: () => setState({ authStep: "email", authOtp: "", authError: "" }),
     logout: () => actions.logout(),
 
     profileName: activeProfile ? activeProfile.name : "No profile",
