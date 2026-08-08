@@ -47,11 +47,11 @@ export default function AuthModal() {
             <input
               value={authOtp}
               onChange={onAuthOtp}
-              placeholder="123456"
-              maxLength={6}
+              placeholder="Enter the code"
+              inputMode="numeric"
               autoFocus
               className="fc-border-dark"
-              style={{ width: "100%", padding: "17px 20px", borderRadius: "16px", border: "1px solid #E8E8E2", background: "#FFFFFF", fontFamily: "Outfit,sans-serif", fontSize: "22px", fontWeight: 800, letterSpacing: "6px", textAlign: "center", outline: "none", color: "#181818" }}
+              style={{ width: "100%", padding: "17px 20px", borderRadius: "16px", border: "1px solid #E8E8E2", background: "#FFFFFF", fontFamily: "Outfit,sans-serif", fontSize: "22px", fontWeight: 800, letterSpacing: "4px", textAlign: "center", outline: "none", color: "#181818" }}
             />
             <div onClick={authBusy ? undefined : verifyOtp} className="hv-lift-2" style={{ marginTop: "16px", textAlign: "center", padding: "17px 0", borderRadius: "40px", background: "#D32F4D", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: authBusy ? "default" : "pointer", opacity: authBusy ? 0.6 : 1, transition: "transform .25s ease" }}>
               {authBusy ? "VERIFYING…" : "VERIFY"}
