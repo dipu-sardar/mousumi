@@ -44,14 +44,14 @@ export function buildViewModel(state, actions) {
   const heroBase = {
     position: "absolute",
     inset: 0,
-    borderRadius: "190px 190px 26px 26px",
+    borderRadius: "26px",
     overflow: "hidden",
     boxShadow: "0 26px 60px rgba(0,0,0,0.12)",
     // No backgroundColor here on purpose: opaque photos cover the whole
     // shape either way, and transparent ones (real product PNGs) should
     // reveal the tone-matched circle behind them, not a flat fallback grey.
-    backgroundPosition: "50% 18%",
-    backgroundSize: "cover",
+    backgroundPosition: "50% 50%",
+    backgroundSize: "contain", // show the whole photo, never crop it
     backgroundRepeat: "no-repeat",
   };
   const home = deco(DESIGNS[s.homeIdx]);
@@ -188,7 +188,7 @@ export function buildViewModel(state, actions) {
 
     // ---------------- design detail ----------------
     design,
-    designImageStyle: { position: "relative", zIndex: 5, width: "min(330px, 62%)", height: "82%", alignSelf: "center", borderRadius: "185px 185px 26px 26px", overflow: "hidden", boxShadow: "0 26px 60px rgba(0,0,0,0.12)", backgroundPosition: "50% 18%", backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundImage: `url(${view})` },
+    designImageStyle: { position: "relative", zIndex: 5, width: "min(330px, 62%)", height: "82%", alignSelf: "center", borderRadius: "26px", overflow: "hidden", boxShadow: "0 26px 60px rgba(0,0,0,0.12)", backgroundPosition: "50% 50%", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundImage: `url(${view})` },
     designCircleStyle: { position: "absolute", width: "min(480px, 70%)", aspectRatio: "1/1", borderRadius: "50%", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 1, transition: "background-color .5s ease", backgroundColor: design.tone },
     designThumbs: design.gallery.map((src, i) => ({
       onClick: () => setState({ viewIdx: i }),
