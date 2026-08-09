@@ -1,4 +1,4 @@
-import { BUDGETS, CATS, DESIGNS, FIELDS, HOW_STEPS, OFFERS, RATING_BARS, REVIEWS, SHOP_STATS, STAGES, ORDERS, tk } from "../data/catalog.js";
+import { BUDGETS, CATS, DESIGNS, FIELDS, HOW_STEPS, OFFERS, RATING_BARS, REVIEWS, SHOP_STATS, STAGES, tk } from "../data/catalog.js";
 
 /**
  * Builds the view-model the whole UI reads from — one call per render.
@@ -44,8 +44,8 @@ export function buildViewModel(state, actions) {
   const budget = BUDGETS.find((b) => b.label === s.budget) || BUDGETS[0];
   const activeProfile = s.profiles.find((p) => p.id === s.profileId);
   const activeAddr = s.addresses.find((a) => a.id === s.addressId);
-  const myOrderList = ORDERS.filter((o) => o.owner === s.account.phone);
-  const tracked = ORDERS.find((o) => o.id === (s.trackQuery || "").trim().toUpperCase());
+  const myOrderList = s.myOrders;
+  const tracked = s.trackedOrder;
   const addrText = activeAddr ? activeAddr.label + " — " + activeAddr.line : "No address set";
   const da = s.draftAddr || {};
 
@@ -89,7 +89,15 @@ export function buildViewModel(state, actions) {
     goHow: () => go("how"),
     goOffers: () => go("offers"),
     goReviews: () => go("reviews"),
-    trackThisOrder: () => setState({ page: "track", trackQuery: "MSM-2026-0148", trackFound: true, trackError: "", stage: 0 }),
+    trackThisOrder: () =>
+      setState((st) => ({
+        page: "track",
+        trackQuery: st.lastOrder ? st.lastOrder.id : "",
+        trackFound: !!st.lastOrder,
+        trackedOrder: st.lastOrder,
+        trackError: "",
+        stage: st.lastOrder ? st.lastOrder.stage : 0,
+      })),
     goAccount: () => {
       if (s.authed) go("account");
       else actions.openAuth("account");
@@ -265,12 +273,7 @@ export function buildViewModel(state, actions) {
       },
       remove: (e) => {
         if (e && e.stopPropagation) e.stopPropagation();
-        setState((st) => {
-          const addresses = st.addresses.filter((x) => x.id !== a.id);
-          const addressId = st.addressId === a.id ? (addresses[0] ? addresses[0].id : "") : st.addressId;
-          return { addresses, addressId, addrEditId: st.addrEditId === a.id ? "" : st.addrEditId };
-        });
-        flash("ADDRESS REMOVED");
+        actions.deleteAddr(a.id);
       },
       style: card(s.addressId === a.id),
     })),
@@ -324,13 +327,30 @@ export function buildViewModel(state, actions) {
     deliveryLabel: "Free",
     discountLabel: discount ? "−" + tk(discount) : "৳0",
     orderTotal: tk(total),
-    orderPrimaryLabel: s.orderStep === 3 ? "CONFIRM & PAY " + tk(total) : "CONTINUE",
+    orderSubmitting: s.orderSubmitting,
+    orderError: s.orderError,
+    orderPrimaryLabel: s.orderSubmitting ? "PLACING ORDER…" : s.orderStep === 3 ? "CONFIRM & PAY " + tk(total) : "CONTINUE",
     orderPrimary: () => {
-      if (s.orderStep < 3) setState({ orderStep: s.orderStep + 1 });
-      else {
-        setState({ page: "done", stage: 0, trackQuery: "MSM-2026-0148", trackFound: false, trackError: "" });
-        flash("ORDER PLACED");
+      if (s.orderStep < 3) {
+        setState({ orderStep: s.orderStep + 1 });
+        return;
       }
+      if (s.orderSubmitting) return;
+      const measureSnapshot = s.measureMethod === "manual" ? { ...s.m } : s.measureMethod === "saved" && activeProfile ? { ...activeProfile.m } : null;
+      actions.placeOrder({
+        measureMethod: s.measureMethod,
+        measurementProfileId: s.measureMethod === "saved" && activeProfile ? activeProfile.id : null,
+        measureSnapshot,
+        pickupDay: s.day,
+        pickupSlot: s.slot,
+        addressId: s.addressId || null,
+        paymentMethod: s.pay,
+        promoCode: s.promoOk ? "EID26" : null,
+        items: orderLines.map((l) => ({ designId: l.d.id, fabric: l.fabric, qty: l.qty, unitPrice: l.d.price, days: l.d.days })),
+        subtotal: linesSubtotal,
+        discount,
+        total,
+      });
     },
 
     // ---------------- cart ----------------
@@ -464,18 +484,11 @@ export function buildViewModel(state, actions) {
       },
       duplicate: (e) => {
         if (e && e.stopPropagation) e.stopPropagation();
-        const id = "pr" + Date.now();
-        setState((st) => ({ profiles: st.profiles.concat([{ id, name: p.name + " (copy)", updated: actions.today(), m: { ...p.m } }]) }));
-        flash("PROFILE DUPLICATED");
+        actions.duplicateProfile(p);
       },
       remove: (e) => {
         if (e && e.stopPropagation) e.stopPropagation();
-        setState((st) => {
-          const profiles = st.profiles.filter((x) => x.id !== p.id);
-          const profileId = st.profileId === p.id ? (profiles[0] ? profiles[0].id : "") : st.profileId;
-          return { profiles, profileId, editId: st.editId === p.id ? "" : st.editId };
-        });
-        flash("PROFILE DELETED");
+        actions.deleteProfile(p.id);
       },
       style: card(s.profileId === p.id),
     })),
@@ -496,28 +509,24 @@ export function buildViewModel(state, actions) {
     cancelDraft: () => setState({ editId: "", draftM: null }),
 
     // ---------------- track ----------------
+    // `tracked` is a real order fetched from Supabase (actions.trackOrder /
+    // AppContext's trackOrder action), scoped by RLS to whichever customer
+    // is logged in — see the note on that action for why a guest can't just
+    // look any code up anymore.
     trackQuery: s.trackQuery,
     onTrackQuery: (e) => setState({ trackQuery: e.target.value }),
     trackFound: s.trackFound,
     trackNotFound: !s.trackFound,
+    trackBusy: s.trackBusy,
     trackError: s.trackError,
-    trackSearch: () => {
-      const query = (s.trackQuery || "").trim().toUpperCase();
-      if (!query) {
-        setState({ trackError: "Enter your order ID to continue." });
-        return;
-      }
-      const hit = ORDERS.find((o) => o.id === query);
-      if (hit) {
-        setState({ trackFound: true, trackError: "", trackQuery: query, stage: hit.stage });
-        flash("ORDER FOUND");
-      } else {
-        setState({ trackFound: false, trackError: "No order found for " + query + ". Check the ID from your confirmation message." });
-      }
-    },
-    trackReset: () => setState({ trackFound: false, trackQuery: "", trackError: "" }),
-    orderId: s.trackQuery ? s.trackQuery.toUpperCase() : "MSM-2026-0148",
-    trackSummary: tracked ? byId(tracked.designId).short + " · " + tracked.slot + " slot · " + tracked.day + " · " + tracked.addr : orderLines[0].d.short + (orderLines.length > 1 ? " +" + (orderLines.length - 1) + " more" : "") + " · " + s.slot + " slot · " + s.day + " · " + addrText,
+    trackSearch: () => actions.trackOrder(s.trackQuery),
+    trackReset: () => setState({ trackFound: false, trackQuery: "", trackError: "", trackedOrder: null }),
+    orderId: s.trackQuery ? s.trackQuery.toUpperCase() : s.lastOrder ? s.lastOrder.id : "",
+    trackSummary: tracked
+      ? tracked.productShort + " · " + tracked.slot + " slot · " + tracked.day + " · " + tracked.addr
+      : s.lastOrder
+        ? s.lastOrder.productShort + " · " + s.lastOrder.slot + " slot · " + s.lastOrder.day + " · " + (s.lastOrder.addrLabel ? s.lastOrder.addrLabel + " — " + s.lastOrder.addr : "No address set")
+        : orderLines[0].d.short + (orderLines.length > 1 ? " +" + (orderLines.length - 1) + " more" : "") + " · " + s.slot + " slot · " + s.day + " · " + addrText,
     trackedStatus: tracked ? tracked.status : "",
     trackedPriority: !!(tracked && tracked.priority),
     orderFacts: tracked
@@ -526,7 +535,7 @@ export function buildViewModel(state, actions) {
           { k: "Contact", v: tracked.phone },
           { k: "Delivery mode", v: tracked.mode },
           { k: "Delivery address", v: tracked.addrLabel + " — " + tracked.addr },
-          { k: "Product", v: byId(tracked.designId).short },
+          { k: "Product", v: tracked.productShort },
           { k: "Order ID / SKU", v: tracked.id },
           { k: "Order date", v: tracked.date },
           { k: tracked.stage >= 4 ? "Delivered on" : "Expected delivery", v: tracked.delivery },
@@ -534,9 +543,9 @@ export function buildViewModel(state, actions) {
           { k: "Assigned karigor", v: tracked.tailor },
         ]
       : [],
-    trackedProduct: tracked ? byId(tracked.designId).short : "",
-    trackedCategory: tracked ? byId(tracked.designId).category : "",
-    trackedPhotoStyle: tracked ? { width: "100%", height: "100%", backgroundPosition: "50% 18%", backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundImage: `url(${byId(tracked.designId).img})` } : {},
+    trackedProduct: tracked ? tracked.productShort : "",
+    trackedCategory: tracked ? tracked.productCategory : "",
+    trackedPhotoStyle: tracked ? { width: "100%", height: "100%", backgroundPosition: "50% 18%", backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundImage: `url(${tracked.productImg})` } : {},
     keyFacts: tracked
       ? [
           { k: "ORDER DATE", v: tracked.date },
@@ -554,7 +563,7 @@ export function buildViewModel(state, actions) {
           { k: "Fabric", v: tracked.fabricSource },
         ]
       : [],
-    orderMeasureRows: tracked ? FIELDS.map((fd) => ({ k: fd.label, v: tracked.m[fd.k] + '"' })) : [],
+    orderMeasureRows: tracked ? FIELDS.map((fd) => ({ k: fd.label, v: tracked.m[fd.k] ? tracked.m[fd.k] + '"' : "—" })) : [],
     measureProfileName: tracked ? tracked.profile : "",
     payRows: tracked
       ? [
@@ -624,11 +633,13 @@ export function buildViewModel(state, actions) {
     referralCode: s.account.referral || "—",
     referralNote: myOrderList.length ? "3 friends joined · ৳600 earned" : "Share your code to start earning.",
     myOrders: myOrderList.map((o) => ({
-      ...deco(byId(o.designId)),
       id: o.id,
       date: o.date,
       status: o.status,
-      track: () => setState({ page: "track", trackQuery: o.id, trackFound: true, trackError: "", stage: o.stage }),
+      short: o.productShort,
+      priceLabel: tk(o.total),
+      photoStyle: { width: "100%", height: "100%", backgroundPosition: "50% 18%", backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundImage: `url(${o.productImg})` },
+      track: () => setState({ page: "track", trackQuery: o.id, trackFound: true, trackError: "", stage: o.stage, trackedOrder: o }),
       statusStyle: { padding: "8px 14px", borderRadius: "24px", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.2px", whiteSpace: "nowrap", ...(o.live ? { background: "#E4F0D2", color: "#3F6B1F" } : { background: "#F0F0EA", color: "#8A8A82" }) },
     })),
   };

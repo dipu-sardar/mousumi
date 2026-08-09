@@ -3,7 +3,9 @@ import { FIELDS } from "../data/catalog.js";
 import { buildViewModel } from "./selectors.js";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 import { mapCustomerToAccount, makeReferralCode } from "../lib/customerMapper.js";
-import { loadSaved, saveSaved } from "../lib/localPersist.js";
+import { listProfiles, createProfile, updateProfile, deleteProfile as apiDeleteProfile } from "../lib/profilesApi.js";
+import { listAddresses, createAddress, updateAddress, deleteAddress as apiDeleteAddress } from "../lib/addressesApi.js";
+import { placeOrder as apiPlaceOrder, fetchOrderByCode, fetchMyOrders } from "../lib/ordersApi.js";
 
 const AppContext = createContext(null);
 
@@ -12,11 +14,13 @@ const AppContext = createContext(null);
  *
  * `account`/`profiles`/`addresses`/`cart` start out as the same demo data
  * ("Rumana Akter") the original prototype shipped with — that's what a
- * guest (not logged in) sees while browsing. Logging in for real (email
- * OTP via Supabase, see the auth actions below) replaces `account` with
- * the signed-in customer's real row and clears `profiles`/`addresses` to
- * match what's actually saved for them (still nothing, until that CRUD is
- * wired up next — see supabase/README.md).
+ * guest (not logged in) sees while browsing. A guest never actually reaches
+ * the profile/address management UI (Account.jsx gates it behind `authed`),
+ * so these demo arrays are decorative until real login happens. Logging in
+ * for real (email OTP via Supabase) replaces `account` with the signed-in
+ * customer's real row, clears `profiles`/`addresses`/`myOrders` to empty,
+ * and then loadCustomerData() below fills them from the real
+ * measurement_profiles/addresses/orders tables — see supabase/README.md.
  */
 const initialState = {
   page: "home",
@@ -30,6 +34,9 @@ const initialState = {
   measureMethod: "saved", // "saved" | "manual" | "home"
   slot: "Morning",
   day: "Today",
+  orderSubmitting: false,
+  orderError: "",
+  lastOrder: null, // the just-placed order, shaped by ordersApi.mapOrderRow
 
   profiles: [
     { id: "pr1", name: "Rumana — Kameez set", updated: "Updated 12 Jun 2026", m: { length: "40.0", shoulder: "14.5", bust: "36.0", waist: "30.0", hip: "38.0", sleeve: "22.0", armhole: "16.0", neckDepth: "7.0" } },
@@ -61,6 +68,7 @@ const initialState = {
     language: "Bangla",
     referral: "RUMANA200",
   },
+  customerId: null, // the real Supabase customers.id — null until logged in
   accountEdit: false,
   draftAcc: null,
 
@@ -80,9 +88,12 @@ const initialState = {
 
   cart: [{ id: "d4", fabric: "Own fabric", qty: 1 }],
   fromCart: false,
+  myOrders: [], // real orders for the signed-in customer — see loadCustomerData()
   trackQuery: "",
   trackFound: false,
   trackError: "",
+  trackBusy: false,
+  trackedOrder: null, // result of the last successful track-by-code lookup
 
   stage: 2,
   menuOpen: false,
@@ -94,21 +105,7 @@ const initialState = {
 };
 
 export function AppProvider({ children }) {
-  // Measurement profiles & addresses survive a refresh via localStorage (see
-  // src/lib/localPersist.js) — everything else in initialState still starts
-  // fresh from the demo data every load, same as before. First visit (or
-  // storage unavailable) falls back to the demo profiles/addresses untouched.
-  const [state, setStateRaw] = useState(() => {
-    const saved = loadSaved();
-    if (!saved) return initialState;
-    return {
-      ...initialState,
-      profiles: saved.profiles ?? initialState.profiles,
-      profileId: saved.profileId ?? initialState.profileId,
-      addresses: saved.addresses ?? initialState.addresses,
-      addressId: saved.addressId ?? initialState.addressId,
-    };
-  });
+  const [state, setStateRaw] = useState(initialState);
 
   /** Mimics React class `setState`: merges a partial object, or the result
    *  of an updater `(prevState) => partial`, into state. Every action below
@@ -126,17 +123,33 @@ export function AppProvider({ children }) {
   const toastTimer = useRef(null);
   const scrollRef = useRef(null);
 
+  /** Fetches this customer's measurement profiles, addresses and orders from
+   *  Supabase and drops them into state — called right after every login
+   *  (fresh OTP or a restored session) so `authed: true` never sits next to
+   *  stale/demo profiles & addresses for long. Best-effort: a failure here
+   *  just leaves the customer with an empty (not wrong) list rather than
+   *  crashing the app. */
+  const loadCustomerData = async (customerId) => {
+    try {
+      const [profiles, addresses, myOrders] = await Promise.all([listProfiles(customerId), listAddresses(customerId), fetchMyOrders()]);
+      setState({
+        profiles,
+        profileId: profiles[0] ? profiles[0].id : "",
+        addresses,
+        addressId: (addresses.find((a) => a.isDefault) || addresses[0] || {}).id || "",
+        myOrders,
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[mousumi] failed to load customer data", err);
+    }
+  };
+
   // On mount: if a Supabase session already exists (the browser was logged
   // in before this page load — supabase-js persists sessions itself), and
   // that session has a matching `customers` row, restore the logged-in
   // state automatically. This is what makes login survive a page refresh,
   // unlike the original demo's pure-in-memory session.
-  //
-  // Note: this used to also clear profiles/addresses to `[]` here (there's
-  // still no backend CRUD for them — see supabase/README.md), but that ran
-  // on *every* refresh and stomped the ones just hydrated from localStorage
-  // above. Leave them alone; loadSaved()/saveSaved() is the source of truth
-  // for them until real profile/address tables exist.
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     let cancelled = false;
@@ -148,7 +161,8 @@ export function AppProvider({ children }) {
       if (!session || cancelled) return;
       const { data: row } = await supabase.from("customers").select("*").eq("auth_user_id", session.user.id).maybeSingle();
       if (row && !cancelled) {
-        setState({ authed: true, account: mapCustomerToAccount(row) });
+        setState({ authed: true, account: mapCustomerToAccount(row), customerId: row.id, profiles: [], profileId: "", addresses: [], addressId: "", myOrders: [] });
+        loadCustomerData(row.id);
       }
     })();
 
@@ -162,18 +176,6 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [state.page]);
-
-  // Keep measurement profiles & addresses on disk so a refresh doesn't
-  // throw away what was just saved (see loadSaved() above and
-  // src/lib/localPersist.js).
-  useEffect(() => {
-    saveSaved({
-      profiles: state.profiles,
-      profileId: state.profileId,
-      addresses: state.addresses,
-      addressId: state.addressId,
-    });
-  }, [state.profiles, state.profileId, state.addresses, state.addressId]);
 
   // Clear pending timers on unmount.
   useEffect(() => {
@@ -258,12 +260,18 @@ export function AppProvider({ children }) {
       authOpen: false,
       authError: "",
       account: mapCustomerToAccount(row),
+      customerId: row.id,
       profiles: [],
       profileId: "",
       addresses: [],
       addressId: "",
+      myOrders: [],
       page: st.authNext || "account",
     }));
+    // A brand-new customer has nothing saved yet, but calling this anyway
+    // keeps the loading path identical for every login — cheap for how
+    // rarely signup happens.
+    loadCustomerData(row.id);
     flash("WELCOME, " + name.toUpperCase());
   };
 
@@ -283,7 +291,8 @@ export function AppProvider({ children }) {
     const { data: row } = await supabase.from("customers").select("*").eq("auth_user_id", data.user.id).maybeSingle();
     setState({ authBusy: false });
     if (row) {
-      setState((st) => ({ authed: true, authOpen: false, authError: "", account: mapCustomerToAccount(row), profiles: [], profileId: "", addresses: [], addressId: "", page: st.authNext || "account" }));
+      setState((st) => ({ authed: true, authOpen: false, authError: "", account: mapCustomerToAccount(row), customerId: row.id, profiles: [], profileId: "", addresses: [], addressId: "", myOrders: [], page: st.authNext || "account" }));
+      loadCustomerData(row.id);
       flash("LOGGED IN");
     } else {
       // Real email confirmed, but no profile yet — one more step.
@@ -293,7 +302,7 @@ export function AppProvider({ children }) {
 
   const logout = async () => {
     if (isSupabaseConfigured) await supabase.auth.signOut();
-    setState({ authed: false, page: "home" });
+    setState({ authed: false, page: "home", customerId: null, profiles: [], profileId: "", addresses: [], addressId: "", myOrders: [], trackedOrder: null, lastOrder: null });
     flash("LOGGED OUT");
   };
 
@@ -307,18 +316,38 @@ export function AppProvider({ children }) {
 
   const newAddrDraft = () => setState({ addrEditId: "new", draftAddr: { label: "", line: "", phone: "", note: "" } });
 
-  const saveAddr = () => {
+  const saveAddr = async () => {
     const s = state;
     const d = s.draftAddr || {};
     const label = (d.label || "").trim() || "Address";
     const line = (d.line || "").trim() || "—";
-    if (s.addrEditId === "new") {
-      const id = "a" + Date.now();
-      setState((st) => ({ addresses: st.addresses.concat([{ id, label, line, phone: d.phone || "", note: d.note || "" }]), addressId: id, addrEditId: "", draftAddr: null }));
-      flash("ADDRESS SAVED");
-    } else {
-      setState((st) => ({ addresses: st.addresses.map((a) => (a.id === st.addrEditId ? { ...a, label, line, phone: d.phone || "", note: d.note || "" } : a)), addrEditId: "", draftAddr: null }));
-      flash("ADDRESS UPDATED");
+    if (!s.customerId) return; // address UI is authed-only — shouldn't happen
+    try {
+      if (s.addrEditId === "new") {
+        const a = await createAddress(s.customerId, { label, line, phone: d.phone, note: d.note }, s.addresses.length === 0);
+        setState((st) => ({ addresses: st.addresses.concat([a]), addressId: a.id, addrEditId: "", draftAddr: null }));
+        flash("ADDRESS SAVED");
+      } else {
+        const a = await updateAddress(s.addrEditId, { label, line, phone: d.phone, note: d.note });
+        setState((st) => ({ addresses: st.addresses.map((x) => (x.id === a.id ? a : x)), addrEditId: "", draftAddr: null }));
+        flash("ADDRESS UPDATED");
+      }
+    } catch (err) {
+      flash("COULDN'T SAVE — " + (err.message || "please try again"));
+    }
+  };
+
+  const deleteAddr = async (id) => {
+    try {
+      await apiDeleteAddress(id);
+      setState((st) => {
+        const addresses = st.addresses.filter((x) => x.id !== id);
+        const addressId = st.addressId === id ? (addresses[0] ? addresses[0].id : "") : st.addressId;
+        return { addresses, addressId, addrEditId: st.addrEditId === id ? "" : st.addrEditId };
+      });
+      flash("ADDRESS REMOVED");
+    } catch (err) {
+      flash("COULDN'T REMOVE — " + (err.message || "please try again"));
     }
   };
 
@@ -332,16 +361,110 @@ export function AppProvider({ children }) {
     setState({ editId: "new", draftName: "", draftM: blank });
   };
 
-  const saveDraft = () => {
+  const saveDraft = async () => {
     const s = state;
     const name = (s.draftName || "").trim() || "Untitled profile";
-    if (s.editId === "new") {
-      const id = "pr" + Date.now();
-      setState((st) => ({ profiles: st.profiles.concat([{ id, name, updated: today(), m: { ...st.draftM } }]), profileId: id, editId: "", draftM: null }));
-      flash("PROFILE SAVED");
-    } else {
-      setState((st) => ({ profiles: st.profiles.map((p) => (p.id === st.editId ? { ...p, name, updated: today(), m: { ...st.draftM } } : p)), editId: "", draftM: null }));
-      flash("PROFILE UPDATED");
+    if (!s.customerId) return; // profile UI is authed-only — shouldn't happen
+    try {
+      if (s.editId === "new") {
+        const p = await createProfile(s.customerId, name, s.draftM);
+        setState((st) => ({ profiles: st.profiles.concat([p]), profileId: p.id, editId: "", draftM: null }));
+        flash("PROFILE SAVED");
+      } else {
+        const p = await updateProfile(s.editId, name, s.draftM);
+        setState((st) => ({ profiles: st.profiles.map((x) => (x.id === p.id ? p : x)), editId: "", draftM: null }));
+        flash("PROFILE UPDATED");
+      }
+    } catch (err) {
+      flash("COULDN'T SAVE — " + (err.message || "please try again"));
+    }
+  };
+
+  const deleteProfile = async (id) => {
+    try {
+      await apiDeleteProfile(id);
+      setState((st) => {
+        const profiles = st.profiles.filter((x) => x.id !== id);
+        const profileId = st.profileId === id ? (profiles[0] ? profiles[0].id : "") : st.profileId;
+        return { profiles, profileId, editId: st.editId === id ? "" : st.editId };
+      });
+      flash("PROFILE DELETED");
+    } catch (err) {
+      flash("COULDN'T DELETE — " + (err.message || "please try again"));
+    }
+  };
+
+  const duplicateProfile = async (p) => {
+    if (!state.customerId) return;
+    try {
+      const copy = await createProfile(state.customerId, p.name + " (copy)", p.m);
+      setState((st) => ({ profiles: st.profiles.concat([copy]) }));
+      flash("PROFILE DUPLICATED");
+    } catch (err) {
+      flash("COULDN'T DUPLICATE — " + (err.message || "please try again"));
+    }
+  };
+
+  /** Places a real order: inserts `orders` + `order_items` in Supabase,
+   *  re-fetches the fully-joined row (design/address/profile names for
+   *  display), then moves to the confirmation page. `payload` is assembled
+   *  by orderPrimary() in selectors.js, which already has the priced-out
+   *  order lines computed for the summary panel. */
+  const placeOrder = async (payload) => {
+    if (!state.customerId) {
+      openAuth("order");
+      return;
+    }
+    setState({ orderSubmitting: true, orderError: "" });
+    try {
+      const order = await apiPlaceOrder({ customerId: state.customerId, ...payload });
+      const full = await fetchOrderByCode(order.order_code);
+      setState((st) => ({
+        page: "done",
+        stage: 0,
+        orderSubmitting: false,
+        orderError: "",
+        lastOrder: full,
+        myOrders: full ? [full].concat(st.myOrders) : st.myOrders,
+        trackQuery: order.order_code,
+        trackFound: false,
+        trackError: "",
+        cart: st.fromCart ? [] : st.cart,
+      }));
+      flash("ORDER PLACED");
+    } catch (err) {
+      setState({ orderSubmitting: false, orderError: (err && err.message) || "Something went wrong — please try again." });
+    }
+  };
+
+  /** Looks a real order up by its "MSM-2026-XXXX" code, scoped by RLS to
+   *  whichever customer is currently logged in — order tracking now
+   *  requires being signed into the account that placed it (Supabase's
+   *  `orders` policy is owner-only; there's no separate "know the code"
+   *  bypass), so a guest gets nudged to log in instead of a dead-end
+   *  "not found". */
+  const trackOrder = async (codeRaw) => {
+    const code = (codeRaw || "").trim().toUpperCase();
+    if (!code) {
+      setState({ trackError: "Enter your order ID to continue." });
+      return;
+    }
+    if (!state.authed) {
+      setState({ trackError: "Log in to the account that placed this order to track it." });
+      openAuth("track");
+      return;
+    }
+    setState({ trackBusy: true, trackError: "" });
+    try {
+      const order = await fetchOrderByCode(code);
+      if (order) {
+        setState({ trackBusy: false, trackFound: true, trackError: "", trackQuery: code, stage: order.stage, trackedOrder: order });
+        flash("ORDER FOUND");
+      } else {
+        setState({ trackBusy: false, trackFound: false, trackedOrder: null, trackError: "No order found for " + code + ". Check the ID from your confirmation message." });
+      }
+    } catch (err) {
+      setState({ trackBusy: false, trackError: (err && err.message) || "Something went wrong — please try again." });
     }
   };
 
@@ -384,9 +507,14 @@ export function AppProvider({ children }) {
     openAddrEditor,
     newAddrDraft,
     saveAddr,
+    deleteAddr,
     openEditor,
     newProfileDraft,
     saveDraft,
+    deleteProfile,
+    duplicateProfile,
+    placeOrder,
+    trackOrder,
     chip,
     card,
   };
