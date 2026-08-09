@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FIELDS } from "../data/catalog.js";
 import { buildViewModel } from "./selectors.js";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
@@ -8,6 +9,32 @@ import { listAddresses, createAddress, updateAddress, deleteAddress as apiDelete
 import { placeOrder as apiPlaceOrder, fetchOrderByCode, fetchMyOrders } from "../lib/ordersApi.js";
 
 const AppContext = createContext(null);
+
+/** Every "page" the app has, mapped to a real URL — the single place that
+ *  translates between the two. `design` isn't in here: it's the one page
+ *  with an id in its path (`/design/:id`), handled separately below. */
+const PAGE_PATH = {
+  home: "/",
+  catalogue: "/catalogue",
+  how: "/how",
+  track: "/track",
+  offers: "/offers",
+  reviews: "/reviews",
+  account: "/account",
+  cart: "/cart",
+  order: "/order",
+  done: "/done",
+};
+
+/** URL -> `{ page, designId }`. The inverse of PAGE_PATH (plus the
+ *  `/design/:id` case) — this is what makes a direct visit or a refresh on
+ *  any URL land on the right page instead of always falling back to home. */
+function resolvePathToPage(pathname) {
+  const designMatch = pathname.match(/^\/design\/([^/]+)\/?$/);
+  if (designMatch) return { page: "design", designId: decodeURIComponent(designMatch[1]) };
+  const entry = Object.entries(PAGE_PATH).find(([, path]) => path === pathname);
+  return { page: entry ? entry[0] : "home", designId: null };
+}
 
 /**
  * Initial application state.
@@ -105,7 +132,21 @@ const initialState = {
 };
 
 export function AppProvider({ children }) {
-  const [state, setStateRaw] = useState(initialState);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // The very first render already reflects whatever URL the browser loaded
+  // (a fresh visit, a shared link, or a refresh) — resolved synchronously
+  // here rather than in an effect, so there's no first-frame flash of the
+  // wrong page before it corrects itself.
+  const [state, setStateRaw] = useState(() => {
+    const resolved = resolvePathToPage(window.location.pathname);
+    return {
+      ...initialState,
+      page: resolved.page,
+      ...(resolved.designId ? { designId: resolved.designId, viewIdx: 0 } : {}),
+    };
+  });
 
   /** Mimics React class `setState`: merges a partial object, or the result
    *  of an updater `(prevState) => partial`, into state. Every action below
@@ -122,6 +163,35 @@ export function AppProvider({ children }) {
   // plain (non-`state`) instance fields on the original class.
   const toastTimer = useRef(null);
   const scrollRef = useRef(null);
+
+  // Keeps `state.page`/`state.designId` in lockstep with the URL — the URL
+  // is the single source of truth (via react-router's `location`), this
+  // just mirrors it into state so every existing `isHome`/`isCatalogue`/…
+  // flag in selectors.js keeps working unchanged. Runs for every kind of
+  // navigation: a go() call below, the browser's back/forward buttons, or
+  // typing/pasting a URL directly — react-router updates `location` the
+  // same way in all three cases. useLayoutEffect (not useEffect) so this
+  // resolves before the browser paints, avoiding a one-frame flash of the
+  // previous page's content after a route change.
+  useLayoutEffect(() => {
+    const resolved = resolvePathToPage(location.pathname);
+    setState((st) => {
+      const samePage = st.page === resolved.page && (resolved.page !== "design" || st.designId === resolved.designId);
+      if (samePage) return { menuOpen: false, searchOpen: false };
+      return resolved.page === "design"
+        ? { page: "design", designId: resolved.designId, viewIdx: 0, menuOpen: false, searchOpen: false }
+        : { page: resolved.page, menuOpen: false, searchOpen: false };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  /** Navigates to a named page (see PAGE_PATH) or, with a `designId`, to
+   *  that design's detail page — the one place that turns a page name into
+   *  a real URL. `state.page` itself updates via the effect above, once
+   *  react-router's `location` reflects the new URL. */
+  const go = (page, designId) => {
+    navigate(designId ? `/design/${designId}` : PAGE_PATH[page] || "/");
+  };
 
   /** Fetches this customer's measurement profiles, addresses and orders from
    *  Supabase and drops them into state — called right after every login
@@ -183,15 +253,6 @@ export function AppProvider({ children }) {
       clearTimeout(toastTimer.current);
     };
   }, []);
-
-  const go = (page, designId) => {
-    const next = { page, menuOpen: false, searchOpen: false };
-    if (designId) {
-      next.designId = designId;
-      next.viewIdx = 0;
-    }
-    setState(next);
-  };
 
   const flash = (msg) => {
     setState({ toast: msg });
@@ -255,7 +316,7 @@ export function AppProvider({ children }) {
       setState({ authError: error.message });
       return;
     }
-    setState((st) => ({
+    setState({
       authed: true,
       authOpen: false,
       authError: "",
@@ -266,8 +327,8 @@ export function AppProvider({ children }) {
       addresses: [],
       addressId: "",
       myOrders: [],
-      page: st.authNext || "account",
-    }));
+    });
+    go(state.authNext || "account");
     // A brand-new customer has nothing saved yet, but calling this anyway
     // keeps the loading path identical for every login — cheap for how
     // rarely signup happens.
@@ -291,7 +352,8 @@ export function AppProvider({ children }) {
     const { data: row } = await supabase.from("customers").select("*").eq("auth_user_id", data.user.id).maybeSingle();
     setState({ authBusy: false });
     if (row) {
-      setState((st) => ({ authed: true, authOpen: false, authError: "", account: mapCustomerToAccount(row), customerId: row.id, profiles: [], profileId: "", addresses: [], addressId: "", myOrders: [], page: st.authNext || "account" }));
+      setState({ authed: true, authOpen: false, authError: "", account: mapCustomerToAccount(row), customerId: row.id, profiles: [], profileId: "", addresses: [], addressId: "", myOrders: [] });
+      go(state.authNext || "account");
       loadCustomerData(row.id);
       flash("LOGGED IN");
     } else {
@@ -302,7 +364,8 @@ export function AppProvider({ children }) {
 
   const logout = async () => {
     if (isSupabaseConfigured) await supabase.auth.signOut();
-    setState({ authed: false, page: "home", customerId: null, profiles: [], profileId: "", addresses: [], addressId: "", myOrders: [], trackedOrder: null, lastOrder: null });
+    setState({ authed: false, customerId: null, profiles: [], profileId: "", addresses: [], addressId: "", myOrders: [], trackedOrder: null, lastOrder: null });
+    go("home");
     flash("LOGGED OUT");
   };
 
@@ -420,7 +483,6 @@ export function AppProvider({ children }) {
       const order = await apiPlaceOrder({ customerId: state.customerId, ...payload });
       const full = await fetchOrderByCode(order.order_code);
       setState((st) => ({
-        page: "done",
         stage: 0,
         orderSubmitting: false,
         orderError: "",
@@ -431,6 +493,7 @@ export function AppProvider({ children }) {
         trackError: "",
         cart: st.fromCart ? [] : st.cart,
       }));
+      go("done");
       flash("ORDER PLACED");
     } catch (err) {
       setState({ orderSubmitting: false, orderError: (err && err.message) || "Something went wrong — please try again." });
