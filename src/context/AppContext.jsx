@@ -131,6 +131,12 @@ export function AppProvider({ children }) {
   // that session has a matching `customers` row, restore the logged-in
   // state automatically. This is what makes login survive a page refresh,
   // unlike the original demo's pure-in-memory session.
+  //
+  // Note: this used to also clear profiles/addresses to `[]` here (there's
+  // still no backend CRUD for them — see supabase/README.md), but that ran
+  // on *every* refresh and stomped the ones just hydrated from localStorage
+  // above. Leave them alone; loadSaved()/saveSaved() is the source of truth
+  // for them until real profile/address tables exist.
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     let cancelled = false;
@@ -142,7 +148,7 @@ export function AppProvider({ children }) {
       if (!session || cancelled) return;
       const { data: row } = await supabase.from("customers").select("*").eq("auth_user_id", session.user.id).maybeSingle();
       if (row && !cancelled) {
-        setState({ authed: true, account: mapCustomerToAccount(row), profiles: [], profileId: "", addresses: [], addressId: "" });
+        setState({ authed: true, account: mapCustomerToAccount(row) });
       }
     })();
 
