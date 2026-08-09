@@ -93,9 +93,14 @@
   transform: translateX(12px) !important;
   color: var(--ms-accent) !important;
 }
-.hv-next-arrow:hover {
-  transform: scale(1.16) translateX(3px) !important;
+/* No transform here on purpose — scale/translateX on :hover moves the
+   button out from under a stationary cursor near its edge, which un-hovers
+   it, reverts the transform, re-hovers it, and repeats: a flicker loop.
+   Color + shadow only avoids that since neither changes the hit box. */
+.hv-next-arrow:hover,
+.hv-prev-arrow:hover {
   background: var(--ms-accent) !important;
+  box-shadow: 0 12px 28px rgba(211, 47, 77, 0.38) !important;
 }
 
 .fc-border-dark:focus {

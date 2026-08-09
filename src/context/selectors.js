@@ -40,7 +40,8 @@ export function buildViewModel(state, actions) {
   });
 
   const design = deco(byId(s.designId));
-  const identityDesign = deco(DESIGNS[0]); // the real-photo product the home hero shows off
+  const homeIdx = ((s.homeIdx % DESIGNS.length) + DESIGNS.length) % DESIGNS.length; // safe for either arrow direction
+  const identityDesign = deco(DESIGNS[homeIdx]); // the real-photo product the home hero shows off — prev/next arrows step through this
   const budget = BUDGETS.find((b) => b.label === s.budget) || BUDGETS[0];
   const activeProfile = s.profiles.find((p) => p.id === s.profileId);
   const activeAddr = s.addresses.find((a) => a.id === s.addressId);
@@ -153,7 +154,7 @@ export function buildViewModel(state, actions) {
       { label: "My account", p: "account" },
     ].map((m) => ({ label: m.label, onClick: () => go(m.p) })),
 
-    // ---------------- home (brand hero — no product carousel here on purpose) ----------------
+    // ---------------- home (brand hero, with prev/next arrows onto the catalogue) ----------------
     identityDesign,
     identityPhotoStyle: {
       position: "absolute",
@@ -165,6 +166,14 @@ export function buildViewModel(state, actions) {
       backgroundRepeat: "no-repeat",
     },
     goIdentityDesign: () => go("design", identityDesign.id),
+    prevIdentityDesign: (e) => {
+      if (e && e.stopPropagation) e.stopPropagation();
+      setState((st) => ({ homeIdx: (((st.homeIdx - 1) % DESIGNS.length) + DESIGNS.length) % DESIGNS.length }));
+    },
+    nextIdentityDesign: (e) => {
+      if (e && e.stopPropagation) e.stopPropagation();
+      setState((st) => ({ homeIdx: (st.homeIdx + 1) % DESIGNS.length }));
+    },
     trustPills: [{ label: "3 months free alteration" }, { label: "Doorstep pickup" }, { label: "Female staff for home visits" }, { label: "bKash · Nagad · Rocket" }],
 
     // ---------------- catalogue ----------------
