@@ -3,6 +3,7 @@ import { FIELDS } from "../data/catalog.js";
 import { buildViewModel } from "./selectors.js";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 import { mapCustomerToAccount, makeReferralCode } from "../lib/customerMapper.js";
+import { loadSaved, saveSaved } from "../lib/localPersist.js";
 
 const AppContext = createContext(null);
 
@@ -93,7 +94,21 @@ const initialState = {
 };
 
 export function AppProvider({ children }) {
-  const [state, setStateRaw] = useState(initialState);
+  // Measurement profiles & addresses survive a refresh via localStorage (see
+  // src/lib/localPersist.js) — everything else in initialState still starts
+  // fresh from the demo data every load, same as before. First visit (or
+  // storage unavailable) falls back to the demo profiles/addresses untouched.
+  const [state, setStateRaw] = useState(() => {
+    const saved = loadSaved();
+    if (!saved) return initialState;
+    return {
+      ...initialState,
+      profiles: saved.profiles ?? initialState.profiles,
+      profileId: saved.profileId ?? initialState.profileId,
+      addresses: saved.addresses ?? initialState.addresses,
+      addressId: saved.addressId ?? initialState.addressId,
+    };
+  });
 
   /** Mimics React class `setState`: merges a partial object, or the result
    *  of an updater `(prevState) => partial`, into state. Every action below
@@ -141,6 +156,18 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [state.page]);
+
+  // Keep measurement profiles & addresses on disk so a refresh doesn't
+  // throw away what was just saved (see loadSaved() above and
+  // src/lib/localPersist.js).
+  useEffect(() => {
+    saveSaved({
+      profiles: state.profiles,
+      profileId: state.profileId,
+      addresses: state.addresses,
+      addressId: state.addressId,
+    });
+  }, [state.profiles, state.profileId, state.addresses, state.addressId]);
 
   // Clear pending timers on unmount.
   useEffect(() => {
