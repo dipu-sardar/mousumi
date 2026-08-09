@@ -97,6 +97,10 @@
   transform: scale(1.16) translateX(3px) !important;
   background: var(--ms-accent) !important;
 }
+.hv-prev-arrow:hover {
+  transform: scale(1.16) translateX(-3px) !important;
+  background: var(--ms-accent) !important;
+}
 
 .fc-border-dark:focus {
   border-color: var(--ms-ink) !important;

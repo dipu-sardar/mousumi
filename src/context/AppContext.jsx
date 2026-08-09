@@ -53,6 +53,7 @@ const initialState = {
   page: "home",
   designId: "d1",
   viewIdx: 0,
+  homeIdx: 0, // which design the Home hero photo shows — prev/next arrows step through DESIGNS
   cat: "ALL",
   budget: "ALL",
   fabric: "Cotton",

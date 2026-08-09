@@ -1,12 +1,30 @@
 import { useApp } from "../../context/AppContext.jsx";
 
 /**
- * Home is a brand statement, not a product carousel: identity copy on the
- * left, one real photo on the right. No "next design" mechanic here on
- * purpose — that browsing job belongs to the Designs/Catalogue page.
+ * Home is mainly a brand statement — identity copy on the left, one real
+ * photo on the right — but the photo itself steps through the catalogue via
+ * the prev/next arrows either side of it, so it doubles as a lightweight
+ * first look at the designs without leaving Home.
  */
 export default function Home() {
-  const { goCatalogue, goHow, trustPills, stats, identityDesign, identityPhotoStyle, goIdentityDesign } = useApp();
+  const { goCatalogue, goHow, trustPills, stats, identityDesign, identityPhotoStyle, goIdentityDesign, prevIdentityDesign, nextIdentityDesign } = useApp();
+
+  const arrowBtnStyle = {
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: "46px",
+    height: "46px",
+    borderRadius: "50%",
+    background: "#181818",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    boxShadow: "0 10px 24px rgba(0,0,0,0.16)",
+    transition: "all .25s ease",
+    zIndex: 2,
+  };
 
   return (
     <div style={{ height: "calc(100vh - 78px)", minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0, 5fr) minmax(0, 6fr)", animation: "msFadeIn 0.5s ease both" }}>
@@ -83,6 +101,17 @@ export default function Home() {
             <span style={{ fontFamily: "Outfit,sans-serif", fontSize: "13px", fontWeight: 700, color: "#fff", textShadow: "0 2px 10px rgba(0,0,0,0.35)" }}>{identityDesign.short}</span>
             <span style={{ fontFamily: "Outfit,sans-serif", fontSize: "13px", fontWeight: 800, color: "#fff", textShadow: "0 2px 10px rgba(0,0,0,0.35)" }}>{identityDesign.priceLabel}</span>
           </div>
+        </div>
+
+        <div onClick={prevIdentityDesign} aria-label="Previous design" title="Previous design" className="hv-prev-arrow" style={{ ...arrowBtnStyle, left: "4%" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </div>
+        <div onClick={nextIdentityDesign} aria-label="Next design" title="Next design" className="hv-next-arrow" style={{ ...arrowBtnStyle, right: "4%" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 6 15 12 9 18" />
+          </svg>
         </div>
       </section>
     </div>
