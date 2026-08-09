@@ -89,20 +89,24 @@ export function buildViewModel(state, actions) {
     goHow: () => go("how"),
     goOffers: () => go("offers"),
     goReviews: () => go("reviews"),
-    trackThisOrder: () =>
+    trackThisOrder: () => {
       setState((st) => ({
-        page: "track",
         trackQuery: st.lastOrder ? st.lastOrder.id : "",
         trackFound: !!st.lastOrder,
         trackedOrder: st.lastOrder,
         trackError: "",
         stage: st.lastOrder ? st.lastOrder.stage : 0,
-      })),
+      }));
+      go("track");
+    },
     goAccount: () => {
       if (s.authed) go("account");
       else actions.openAuth("account");
     },
-    goOrderMeasure: () => setState({ page: "order", orderStep: 1, menuOpen: false, searchOpen: false }),
+    goOrderMeasure: () => {
+      setState({ orderStep: 1 });
+      go("order");
+    },
 
     toggleMenu: () => setState((st) => ({ menuOpen: !st.menuOpen })),
     toggleSearch: () => setState((st) => ({ searchOpen: !st.searchOpen })),
@@ -184,7 +188,8 @@ export function buildViewModel(state, actions) {
         actions.openAuth("order");
         return;
       }
-      setState({ page: "order", orderStep: 1, fromCart: false });
+      setState({ orderStep: 1, fromCart: false });
+      go("order");
     },
     addToCart: () => {
       const id = s.designId,
@@ -385,7 +390,8 @@ export function buildViewModel(state, actions) {
         actions.openAuth("order");
         return;
       }
-      setState({ page: "order", orderStep: 1, fromCart: true });
+      setState({ orderStep: 1, fromCart: true });
+      go("order");
     },
 
     // ---------------- account / auth ----------------
@@ -612,7 +618,8 @@ export function buildViewModel(state, actions) {
       ...o,
       cardStyle: { borderRadius: "24px", padding: "26px", cursor: "pointer", transition: "transform .3s cubic-bezier(0.22,1,0.36,1)", background: o.tone },
       use: () => {
-        setState({ promo: o.code, page: "order", orderStep: 3, promoOk: o.code === "EID26" });
+        setState({ promo: o.code, orderStep: 3, promoOk: o.code === "EID26" });
+        go("order");
         flash("CODE " + o.code + " ADDED");
       },
     })),
@@ -639,7 +646,10 @@ export function buildViewModel(state, actions) {
       short: o.productShort,
       priceLabel: tk(o.total),
       photoStyle: { width: "100%", height: "100%", backgroundPosition: "50% 18%", backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundImage: `url(${o.productImg})` },
-      track: () => setState({ page: "track", trackQuery: o.id, trackFound: true, trackError: "", stage: o.stage, trackedOrder: o }),
+      track: () => {
+        setState({ trackQuery: o.id, trackFound: true, trackError: "", stage: o.stage, trackedOrder: o });
+        go("track");
+      },
       statusStyle: { padding: "8px 14px", borderRadius: "24px", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.2px", whiteSpace: "nowrap", ...(o.live ? { background: "#E4F0D2", color: "#3F6B1F" } : { background: "#F0F0EA", color: "#8A8A82" }) },
     })),
   };
