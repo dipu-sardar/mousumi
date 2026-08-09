@@ -29,6 +29,8 @@ export default function OrderFlow() {
     orderTotal,
     orderPrimary,
     orderPrimaryLabel,
+    orderSubmitting,
+    orderError,
   } = useApp();
 
   return (
@@ -267,9 +269,16 @@ export default function OrderFlow() {
             <span style={{ fontFamily: "Outfit,sans-serif", fontSize: "13px", fontWeight: 800, letterSpacing: "1.4px" }}>TOTAL</span>
             <span style={{ fontFamily: "Outfit,sans-serif", fontSize: "26px", fontWeight: 800 }}>{orderTotal}</span>
           </div>
-          <div onClick={orderPrimary} className="hv-bg-accent-lift-2" style={{ textAlign: "center", padding: "17px 0", borderRadius: "40px", background: "#181818", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: "pointer", transition: "all .25s ease" }}>
+          <div
+            onClick={orderSubmitting ? undefined : orderPrimary}
+            className="hv-bg-accent-lift-2"
+            style={{ textAlign: "center", padding: "17px 0", borderRadius: "40px", background: "#181818", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: orderSubmitting ? "default" : "pointer", opacity: orderSubmitting ? 0.6 : 1, transition: "all .25s ease" }}
+          >
             {orderPrimaryLabel}
           </div>
+          {orderError && (
+            <div style={{ marginTop: "14px", padding: "13px 16px", borderRadius: "14px", background: "#F9E5E9", color: "#A32138", fontSize: "12.5px", lineHeight: 1.6 }}>{orderError}</div>
+          )}
           <div style={{ fontSize: "11.5px", color: "#9A9A92", textAlign: "center", marginTop: "14px", lineHeight: 1.6 }}>
             Free alterations for 3 months.
             <br />

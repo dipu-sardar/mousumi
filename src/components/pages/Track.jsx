@@ -7,6 +7,7 @@ export default function Track() {
     onTrackQuery,
     trackSearch,
     trackError,
+    trackBusy,
     goAccount,
     trackFound,
     trackedPhotoStyle,
@@ -48,8 +49,12 @@ export default function Track() {
               className="fc-border-dark"
               style={{ flex: 1, minWidth: "240px", padding: "18px 20px", borderRadius: "16px", border: "1px solid #E8E8E2", background: "#FFFFFF", fontFamily: "Outfit,sans-serif", fontSize: "16px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", outline: "none", color: "#181818" }}
             />
-            <div onClick={trackSearch} className="hv-bg-accent-lift-2" style={{ padding: "18px 32px", borderRadius: "16px", background: "#181818", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: "pointer", transition: "all .25s ease" }}>
-              TRACK ORDER
+            <div
+              onClick={trackBusy ? undefined : trackSearch}
+              className="hv-bg-accent-lift-2"
+              style={{ padding: "18px 32px", borderRadius: "16px", background: "#181818", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "11.5px", fontWeight: 800, letterSpacing: "1.8px", cursor: trackBusy ? "default" : "pointer", opacity: trackBusy ? 0.6 : 1, transition: "all .25s ease" }}
+            >
+              {trackBusy ? "SEARCHING…" : "TRACK ORDER"}
             </div>
           </div>
           {trackError && <div style={{ marginTop: "16px", padding: "14px 18px", borderRadius: "14px", background: "#F9E5E9", color: "#A32138", fontSize: "13px", lineHeight: 1.6 }}>{trackError}</div>}

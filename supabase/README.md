@@ -47,14 +47,39 @@ here, never an edit to `0001_init.sql`.** That gives you (and me, in a future
 session) a full, ordered history of exactly how the database got to its
 current shape — which is also just `git log` on this folder.
 
+## Orders are real (as of migration 0004)
+
+`0004_orders_go_live.sql` seeds `designs` (the 8-item catalogue) and
+`promo_codes` (EID26 / FIRST15 / BLOUSE2) with the real, confirmed
+catalogue and offers — not placeholder — so that real orders can reference
+them. It also adds the `order_items` INSERT policy 0001 was missing, and an
+`order_code` auto-generator ("MSM-2026-XXXX") via a sequence + trigger.
+
+After this migration, checkout (src/context/selectors.js `orderPrimary` →
+AppContext `placeOrder` → src/lib/ordersApi.js) writes real `orders` +
+`order_items` rows instead of faking a confirmation screen, and Track /
+Account read those rows back (RLS-scoped to whoever is logged in — order
+tracking now requires being signed into the account that placed the order,
+there's no separate "just know the code" bypass). Measurement profiles and
+addresses (src/lib/profilesApi.js, addressesApi.js) moved from a
+localStorage stopgap to the real `measurement_profiles`/`addresses` tables
+at the same time, since orders need real rows to (optionally) point at.
+
+**Run `0004_orders_go_live.sql` in the SQL Editor** the same way as the
+earlier migrations before testing this on a project that hasn't seen it yet.
+
 ## What's deliberately not in the schema yet
 
 - **Staff roles / who can update `orders.stage`.** The `staff` table exists,
   but no policy lets anyone write order status yet — that's the "staff
   panel" feature, designed together when you're ready to build it.
-- **Seed data for `designs` / `promo_codes` / `reviews`.** The current
-  frontend's designs, offers and reviews are demo content from the original
-  prototype. Before loading any of it into the real database, confirm with
-  me which of it is your actual catalogue/offers vs. placeholder — reviews
-  in particular should never be seeded as if they're real customer
-  testimonials unless they are.
+- **Seed data for `reviews`.** Still the original prototype's demo content —
+  don't load it as if it's real customer testimonials unless it is.
+- **Real payment processing.** "CONFIRM & PAY" records the chosen method
+  (bKash/Nagad/Rocket/Card) on the order but doesn't call any payment
+  gateway — every order is created `pay_status: 'Unpaid'`, `advance_paid: 0`.
+  Wiring an actual gateway is a separate step.
+- **FIRST15 / BLOUSE2 discount math at checkout.** Both codes exist for real
+  in `promo_codes` now, but only EID26's flat ৳200 is actually wired into
+  the order total (same as before this migration) — percent and bundle
+  pricing rules are a follow-up.
