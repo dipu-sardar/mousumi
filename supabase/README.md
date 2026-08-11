@@ -129,6 +129,22 @@ system.
 
 **Run `0007_item_pickup_tags.sql`** in the SQL Editor after 0006.
 
+## Customer sees their assigned karigor's contact (as of migration 0008)
+
+`0008_customer_sees_karigor.sql` adds one RLS policy: a customer can
+`select` a `staff` row only when that staff member is `assigned_staff_id`
+on one of their *own* orders. Track's sidebar shows a "YOUR KARIGOR" card
+(name, phone, email) once an order has one assigned — before that, or for
+any other customer's orders, the policy grants nothing.
+
+This is row-level, not column-level — the customer sees the same row's
+phone and email a `staff view own row` / `admin manage staff` query would,
+not a redacted subset. That's deliberate, per the project owner: the point
+is letting a customer reach their own tailor directly, not just show a
+name.
+
+**Run `0008_customer_sees_karigor.sql`** in the SQL Editor after 0007.
+
 ## What's deliberately not in the schema yet
 
 - **`measurer` / `rider` staff roles.** The `staff.role` check constraint

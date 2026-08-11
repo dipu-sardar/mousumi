@@ -4,9 +4,13 @@ const str = (v) => (v == null ? "" : String(v));
 const fmtDate = (v) => (v ? new Date(v).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
 
 // The full embed used by both fetchOrderByCode and fetchMyOrders — order
-// items with their design, plus the address/profile/customer the order
-// points at, all in one round trip via PostgREST's FK-based embedding.
-const ORDER_SELECT = "*, order_items(*, designs(*)), addresses(*), measurement_profiles(*), customers(name, phone, whatsapp)";
+// items with their design, plus the address/profile/customer/assigned-staff
+// the order points at, all in one round trip via PostgREST's FK-based
+// embedding. The `staff!assigned_staff_id(...)` embed only returns a row
+// once 0008_customer_sees_karigor.sql's RLS policy is in place — before
+// that migration runs, it silently comes back null and tailor* below just
+// falls back to "Not yet assigned", not an error.
+const ORDER_SELECT = "*, order_items(*, designs(*)), addresses(*), measurement_profiles(*), customers(name, phone, whatsapp), staff!assigned_staff_id(name, phone, email)";
 
 /** Maps a fetched order row (with the embeds above) onto the flat shape
  *  Track.jsx / Account.jsx already read — this used to be a row straight
@@ -73,7 +77,10 @@ export function mapOrderRow(row) {
     advance: row.advance_paid,
     payMethod: row.payment_method || "",
     payStatus: row.pay_status,
-    tailor: row.assigned_staff_id ? "Assigned" : "Not yet assigned",
+    tailorAssigned: !!row.assigned_staff_id,
+    tailor: row.staff ? row.staff.name : "Not yet assigned",
+    tailorPhone: row.staff ? row.staff.phone : "",
+    tailorEmail: row.staff ? row.staff.email : "",
     priority: false,
     owner: row.customer_id,
   };
