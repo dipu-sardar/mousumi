@@ -600,6 +600,16 @@ export function buildViewModel(state, actions) {
           { k: "Fabric", v: tracked.fabricSource },
         ]
       : [],
+    // Only once a karigor is actually assigned — see 0008_customer_sees_karigor.sql
+    // for the RLS that makes tailorPhone/tailorEmail come back non-empty.
+    karigorRows:
+      tracked && tracked.tailorAssigned
+        ? [
+            { k: "Name", v: tracked.tailor },
+            { k: "Phone", v: tracked.tailorPhone || "—" },
+            { k: "Email", v: tracked.tailorEmail || "—" },
+          ]
+        : [],
     orderMeasureRows: tracked ? FIELDS.map((fd) => ({ k: fd.label, v: tracked.m[fd.k] ? tracked.m[fd.k] + '"' : "—" })) : [],
     measureProfileName: tracked ? tracked.profile : "",
     payRows: tracked

@@ -27,6 +27,7 @@ export default function Track() {
     measureProfileName,
     orderMeasureRows,
     customerRows,
+    karigorRows,
     payRows,
     dueLabel,
   } = useApp();
@@ -162,6 +163,20 @@ export default function Track() {
                   ))}
                 </div>
               </div>
+
+              {karigorRows.length > 0 && (
+                <div style={{ background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "24px", padding: "24px" }}>
+                  <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.8px", color: "#9A9A92", marginBottom: "16px" }}>YOUR KARIGOR</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "11px" }}>
+                    {karigorRows.map((k) => (
+                      <div key={k.k} style={{ display: "flex", justifyContent: "space-between", gap: "16px", fontSize: "12.5px", paddingBottom: "10px", borderBottom: "1px solid #F2F2EC" }}>
+                        <span style={{ color: "#9A9A92", whiteSpace: "nowrap" }}>{k.k}</span>
+                        <span style={{ fontWeight: 600, textAlign: "right", overflowWrap: "anywhere" }}>{k.v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div style={{ background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "24px", padding: "24px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: "16px" }}>
