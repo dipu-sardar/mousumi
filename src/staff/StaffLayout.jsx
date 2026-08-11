@@ -1,11 +1,18 @@
+import { Link, useLocation } from "react-router-dom";
 import { useStaff } from "./StaffContext.jsx";
 import { useViewport } from "../hooks/useViewport.js";
 
 const ROLE_LABEL = { admin: "অ্যাডমিন", tailor: "কর্মী" };
+const NAV_TABS = [
+  { to: "/", label: "ড্যাশবোর্ড" },
+  { to: "/orders", label: "অর্ডার" },
+  { to: "/designs", label: "ডিজাইন" },
+];
 
 export default function StaffLayout({ children }) {
-  const { staffRow, logout, toast } = useStaff();
+  const { staffRow, isAdmin, logout, toast } = useStaff();
   const { isMobile } = useViewport();
+  const location = useLocation();
 
   return (
     <div style={{ minHeight: "100dvh", background: "#F9F9F7", color: "#181818", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
@@ -41,6 +48,33 @@ export default function StaffLayout({ children }) {
           </div>
         </div>
       </header>
+
+      {isAdmin && (
+        <nav style={{ display: "flex", gap: isMobile ? "18px" : "28px", padding: isMobile ? "0 16px" : "0 32px", borderBottom: "1px solid #E8E8E2", background: "#F9F9F7", overflowX: "auto" }}>
+          {NAV_TABS.map((t) => {
+            const active = location.pathname === t.to;
+            return (
+              <Link
+                key={t.to}
+                to={t.to}
+                style={{
+                  padding: "14px 0",
+                  fontFamily: "Outfit,sans-serif",
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  letterSpacing: "1.2px",
+                  color: active ? "#181818" : "#9A9A92",
+                  borderBottom: active ? "2px solid #D32F4D" : "2px solid transparent",
+                  whiteSpace: "nowrap",
+                  transition: "color .2s ease",
+                }}
+              >
+                {t.label}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
 
       <main style={{ padding: isMobile ? "20px 16px 60px" : "36px 40px 80px" }}>{children}</main>
 

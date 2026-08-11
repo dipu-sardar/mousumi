@@ -1,7 +1,10 @@
+import { Routes, Route, Navigate } from "react-router-dom";
 import { StaffProvider, useStaff } from "./StaffContext.jsx";
 import StaffLogin from "./StaffLogin.jsx";
 import StaffLayout from "./StaffLayout.jsx";
-import AdminDashboard from "./AdminDashboard.jsx";
+import Dashboard from "./Dashboard.jsx";
+import OrdersView from "./OrdersView.jsx";
+import DesignsView from "./DesignsView.jsx";
 import TailorQueue from "./TailorQueue.jsx";
 import { isSupabaseConfigured } from "../lib/supabaseClient.js";
 
@@ -24,7 +27,14 @@ function StaffScreen() {
 
   return (
     <StaffLayout>
-      {isAdmin && <AdminDashboard />}
+      {isAdmin && (
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/orders" element={<OrdersView />} />
+          <Route path="/designs" element={<DesignsView />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      )}
       {isTailor && !isAdmin && <TailorQueue />}
       {!isAdmin && !isTailor && (
         <div style={{ color: "#9A9A92", fontSize: "13px" }}>এই রোলের জন্য এখনো কোনো ভিউ বানানো হয়নি — অ্যাডমিনের সাথে যোগাযোগ করুন।</div>

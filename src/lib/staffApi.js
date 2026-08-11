@@ -11,9 +11,10 @@ const fmtDate = (v) => (v ? new Date(v).toLocaleDateString("en-GB", { day: "nume
 // row UUID to issue updates against.
 const ADMIN_ORDER_SELECT = "*, order_items(*, designs(*)), addresses(*), measurement_profiles(*), customers(name, phone, whatsapp)";
 
-/** Maps an admin-embedded order row onto the flat shape AdminDashboard.jsx
- *  reads. Keeps the real `orders.id` (for updates) separate from the
- *  customer-facing `order_code`. */
+/** Maps an admin-embedded order row onto the flat shape OrdersView.jsx (and
+ *  Dashboard.jsx, via computeDashboardStats()) read. Keeps the real
+ *  `orders.id` (for updates) separate from the customer-facing
+ *  `order_code`. */
 export function mapAdminOrderRow(row) {
   const items = row.order_items || [];
   const primary = items[0] ? items[0].designs : null;
@@ -40,6 +41,7 @@ export function mapAdminOrderRow(row) {
     pickupSlot: row.pickup_slot || "—",
     addressLine: addr ? addr.label + " — " + addr.line : "No address on file",
     assignedStaffId: row.assigned_staff_id,
+    createdAt: row.created_at, // raw ISO timestamp — computeDashboardStats() needs real dates, not the pretty-printed one below
     createdDate: fmtDate(row.created_at),
     expectedDelivery: fmtDate(row.expected_delivery),
   };
@@ -139,6 +141,62 @@ export async function updateOrderAsAdmin(orderId, patch) {
   if (patch.advancePaid !== undefined) row.advance_paid = patch.advancePaid;
   if (patch.assignedStaffId !== undefined) row.assigned_staff_id = patch.assignedStaffId;
   const { error } = await supabase.from("orders").update(row).eq("id", orderId);
+  if (error) throw error;
+}
+
+/** Dashboard numbers, computed client-side from the same order list
+ *  OrdersView.jsx already fetches — no new SQL/RPC needed since the
+ *  "admin view all orders" policy already covers this data and a small
+ *  shop's whole order history is cheap to pull and reduce in JS. If order
+ *  volume ever makes that wasteful, replace the caller with a real
+ *  aggregate query and keep this function's output shape the same. */
+export function computeDashboardStats(orders) {
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const todayCount = orders.filter((o) => o.createdAt && new Date(o.createdAt).toDateString() === todayStr).length;
+  const monthOrders = orders.filter((o) => o.createdAt && new Date(o.createdAt) >= monthStart);
+  const monthRevenue = monthOrders.reduce((sum, o) => sum + o.total, 0);
+  const byStage = STAGES.map((s, i) => ({ label: s.label, count: orders.filter((o) => o.stage === i).length }));
+  const pendingPickup = orders.filter((o) => o.stage === 0).length;
+  const unpaid = orders.filter((o) => o.payStatus !== "Paid");
+  const unpaidTotal = unpaid.reduce((sum, o) => sum + Math.max(0, o.total - o.advancePaid), 0);
+
+  return {
+    totalOrders: orders.length,
+    todayCount,
+    monthRevenue,
+    monthOrderCount: monthOrders.length,
+    byStage,
+    pendingPickup,
+    unpaidCount: unpaid.length,
+    unpaidTotal,
+  };
+}
+
+// ---------------- admin: designs ----------------
+
+/** Every design, active or not — admin needs to see and reactivate
+ *  discontinued ones too, unlike the shop's public "active = true" view. */
+export async function fetchAllDesigns() {
+  const { data, error } = await supabase.from("designs").select("*").order("id");
+  if (error) throw error;
+  return data || [];
+}
+
+/** `id` is a short hand-picked slug (the table's primary key, not a
+ *  generated UUID — see 0001_init.sql), so it's the one field a new
+ *  design's form collects that an edit form doesn't: changing it on an
+ *  existing row would orphan every order_items row still pointing at the
+ *  old id. */
+export async function createDesign(design) {
+  const { error } = await supabase.from("designs").insert(design);
+  if (error) throw error;
+}
+
+export async function updateDesign(id, patch) {
+  const { error } = await supabase.from("designs").update(patch).eq("id", id);
   if (error) throw error;
 }
 

@@ -3,25 +3,12 @@ import { fetchAdminOrders, fetchTailors, updateOrderAsAdmin, STAGES } from "../l
 import { useStaff } from "./StaffContext.jsx";
 import { useViewport } from "../hooks/useViewport.js";
 import { tk } from "../data/catalog.js";
+import { chip } from "./styleHelpers.js";
 
 const PAY_STATUSES = ["Unpaid", "Partial", "Paid"];
 const PAY_LABEL = { Unpaid: "অপরিশোধিত", Partial: "আংশিক", Paid: "পরিশোধিত" };
 
-const chip = (active) => ({
-  padding: "8px 14px",
-  borderRadius: "20px",
-  fontFamily: "Outfit,sans-serif",
-  fontSize: "10.5px",
-  fontWeight: 800,
-  letterSpacing: "0.6px",
-  cursor: "pointer",
-  transition: "all .2s ease",
-  border: active ? "1px solid #181818" : "1px solid #E2E2DA",
-  background: active ? "#181818" : "#FFFFFF",
-  color: active ? "#FFFFFF" : "#6A6A64",
-});
-
-export default function AdminDashboard() {
+export default function OrdersView() {
   const { flash } = useStaff();
   const { isMobile } = useViewport();
   const [orders, setOrders] = useState(null); // null = loading

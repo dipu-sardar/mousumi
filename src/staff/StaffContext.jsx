@@ -8,10 +8,10 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Auth-only context for the staff app — deliberately much smaller than the
- * customer AppContext.jsx. Order data lives in local state inside
- * AdminDashboard.jsx / TailorQueue.jsx instead of here, since only one of
- * those ever renders for a given session (role decides which) and there's
- * nothing to share between them.
+ * customer AppContext.jsx. Order/design data lives in local state inside
+ * each view (Dashboard.jsx, OrdersView.jsx, DesignsView.jsx, TailorQueue.jsx)
+ * instead of here, since only the role-appropriate ones ever render for a
+ * given session and there's nothing to share between them.
  */
 export function StaffProvider({ children }) {
   const [loading, setLoading] = useState(true); // true while restoring a session on first load

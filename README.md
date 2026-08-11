@@ -54,10 +54,13 @@ src/
   staff/                     The staff panel — a second, separate app that
                                shares this build but not App.jsx's state.
                                StaffContext.jsx (auth only), StaffLogin,
-                               StaffLayout, AdminDashboard (full order
-                               management), TailorQueue (assigned orders,
-                               stage-only). See supabase/README.md for the
-                               roles/permissions and staff-login setup.
+                               StaffLayout (nav tabs for admin). Admin gets
+                               three routes — Dashboard, OrdersView (full
+                               order management), DesignsView (catalogue
+                               CRUD); a tailor gets just TailorQueue
+                               (assigned orders, stage-only). See
+                               supabase/README.md for the roles/permissions
+                               and staff-login setup.
   lib/
     staffApi.js                Staff panel's Supabase calls (see supabase/README.md)
   styles/
