@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { fetchAdminOrders, fetchTailors, updateOrderAsAdmin, STAGES } from "../lib/staffApi.js";
 import { useStaff } from "./StaffContext.jsx";
 import { useViewport } from "../hooks/useViewport.js";
@@ -7,14 +8,31 @@ import { chip } from "./styleHelpers.js";
 
 const PAY_STATUSES = ["Unpaid", "Partial", "Paid"];
 const PAY_LABEL = { Unpaid: "অপরিশোধিত", Partial: "আংশিক", Paid: "পরিশোধিত" };
+// The payment-filter row groups Unpaid+Partial as one "টাকা বাকি" chip —
+// what actually matters when hunting for money owed is "not fully paid
+// yet", not which of the two due-states it's in (the order card already
+// shows the exact one).
+const PAY_FILTERS = [
+  { key: "DUE", label: "টাকা বাকি" },
+  { key: "Paid", label: "পরিশোধিত" },
+];
 
 export default function OrdersView() {
   const { flash } = useStaff();
   const { isMobile } = useViewport();
+  const [searchParams] = useSearchParams();
   const [orders, setOrders] = useState(null); // null = loading
   const [tailors, setTailors] = useState([]);
   const [error, setError] = useState("");
-  const [stageFilter, setStageFilter] = useState("ALL");
+  // Dashboard.jsx deep-links here with ?stage=<index> / ?pay=due — read once
+  // on mount as the starting filter; the chips below still work normally
+  // from there, this just decides where the view opens.
+  const [stageFilter, setStageFilter] = useState(() => {
+    const raw = searchParams.get("stage");
+    const st = raw !== null ? STAGES[Number(raw)] : null;
+    return st ? st.label : "ALL";
+  });
+  const [payFilter, setPayFilter] = useState(() => (searchParams.get("pay") === "due" ? "DUE" : "ALL"));
 
   const load = async () => {
     try {
@@ -42,10 +60,15 @@ export default function OrdersView() {
 
   const filtered = useMemo(() => {
     if (!orders) return [];
-    if (stageFilter === "ALL") return orders;
-    const i = STAGES.findIndex((s) => s.label === stageFilter);
-    return orders.filter((o) => o.stage === i);
-  }, [orders, stageFilter]);
+    let list = orders;
+    if (stageFilter !== "ALL") {
+      const i = STAGES.findIndex((s) => s.label === stageFilter);
+      list = list.filter((o) => o.stage === i);
+    }
+    if (payFilter === "DUE") list = list.filter((o) => o.payStatus !== "Paid");
+    else if (payFilter === "Paid") list = list.filter((o) => o.payStatus === "Paid");
+    return list;
+  }, [orders, stageFilter, payFilter]);
 
   // Stage 0 = Pending (see 0006_order_confirmation.sql) — every order sits
   // here until the owner explicitly confirms it. Surfaced as its own
@@ -82,9 +105,9 @@ export default function OrdersView() {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "24px" }}>
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
         <div onClick={() => setStageFilter("ALL")} style={chip(stageFilter === "ALL")}>
-          সব
+          সব স্টেজ
         </div>
         {STAGES.map((s) => (
           <div key={s.label} onClick={() => setStageFilter(s.label)} style={chip(stageFilter === s.label)}>
@@ -92,6 +115,19 @@ export default function OrdersView() {
           </div>
         ))}
       </div>
+
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "24px" }}>
+        <div onClick={() => setPayFilter("ALL")} style={chip(payFilter === "ALL")}>
+          সব পেমেন্ট
+        </div>
+        {PAY_FILTERS.map((pf) => (
+          <div key={pf.key} onClick={() => setPayFilter(pf.key)} style={chip(payFilter === pf.key)}>
+            {pf.label}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ fontSize: "12px", color: "#9A9A92", marginBottom: "16px" }}>{filtered.length} টা অর্ডার এই ফিল্টারে</div>
 
       {filtered.length === 0 && <div style={{ color: "#9A9A92", fontSize: "13px" }}>এই ফিল্টারে কোনো অর্ডার নেই।</div>}
 
