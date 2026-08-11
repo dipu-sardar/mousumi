@@ -20,10 +20,16 @@
 -- that turns out to matter in practice (same fabric bundle usually covers
 -- the whole qty on one pickup anyway).
 
+-- Written to be safe to run more than once from scratch — Supabase's SQL
+-- Editor runs a pasted block as one implicit transaction, so a failure on
+-- any one statement (like the function-signature error below, on a first
+-- attempt at this file) rolls the whole block back; every statement here
+-- is a no-op if it already ran.
+
 -- ============================================================
 -- 1. order_items.position
 -- ============================================================
-alter table order_items add column position integer;
+alter table order_items add column if not exists position integer;
 
 -- Backfill whatever's already there. order_items has no created_at to
 -- order by (nothing needed one before now), so this orders by `id` —
@@ -44,10 +50,13 @@ alter table order_items alter column position set default 1; -- safety net only 
 
 -- ============================================================
 -- 2. staff_order_queue() — add the computed tag to what a tailor's queue
--- returns. Same signature as before plus one column, so existing callers
--- (staffApi.js's mapQueueRow) just need to read the new field, not change
--- how they call this.
+-- returns. Existing callers (staffApi.js's mapQueueRow) just need to read
+-- the new field, not change how they call this — but Postgres itself
+-- won't let CREATE OR REPLACE change a function's return-table shape
+-- (adding a column counts), so the old one has to go first.
 -- ============================================================
+drop function if exists public.staff_order_queue();
+
 create or replace function public.staff_order_queue()
 returns table (
   order_id           uuid,
