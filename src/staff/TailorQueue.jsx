@@ -5,6 +5,16 @@ import { useViewport } from "../hooks/useViewport.js";
 
 const MEASURE_LABELS = { length: "দৈর্ঘ্য", shoulder: "কাঁধ", bust: "বুক", waist: "কোমর", hip: "হিপ", sleeve: "হাতা", armhole: "আর্মহোল", neckDepth: "গলার গভীরতা" };
 
+// Pending/Confirmed (STAGES[0]/[1]) are the owner's call, not the stitching
+// floor's — staff_update_order_stage() rejects a tailor session setting
+// either one, so there's no point offering clickable chips for them here.
+// A tailor's queue only ever contains assigned orders anyway (see
+// staff_order_queue() in 0005), which in practice means "already past
+// Confirmed" — but showing only the stages they can actually use keeps
+// that guarantee visible in the UI too, not just enforced server-side.
+const TAILOR_STAGE_OFFSET = 2;
+const TAILOR_STAGES = STAGES.slice(TAILOR_STAGE_OFFSET);
+
 export default function TailorQueue() {
   const { flash } = useStaff();
   const { isMobile } = useViewport();
@@ -74,28 +84,31 @@ export default function TailorQueue() {
             )}
 
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "14px" }}>
-              {STAGES.map((st, i) => (
-                <div
-                  key={i}
-                  onClick={busyId ? undefined : () => onAdvance(o.orderId, i)}
-                  style={{
-                    padding: "9px 14px",
-                    borderRadius: "20px",
-                    fontFamily: "Outfit,sans-serif",
-                    fontSize: "10.5px",
-                    fontWeight: 800,
-                    letterSpacing: "0.6px",
-                    cursor: busyId ? "default" : "pointer",
-                    opacity: busyId && busyId !== o.orderId ? 0.5 : 1,
-                    border: o.stage === i ? "1px solid #181818" : "1px solid #E2E2DA",
-                    background: o.stage === i ? "#181818" : "#FFFFFF",
-                    color: o.stage === i ? "#FFFFFF" : "#6A6A64",
-                    transition: "all .2s ease",
-                  }}
-                >
-                  {st.label}
-                </div>
-              ))}
+              {TAILOR_STAGES.map((st, offsetI) => {
+                const i = offsetI + TAILOR_STAGE_OFFSET;
+                return (
+                  <div
+                    key={i}
+                    onClick={busyId ? undefined : () => onAdvance(o.orderId, i)}
+                    style={{
+                      padding: "9px 14px",
+                      borderRadius: "20px",
+                      fontFamily: "Outfit,sans-serif",
+                      fontSize: "10.5px",
+                      fontWeight: 800,
+                      letterSpacing: "0.6px",
+                      cursor: busyId ? "default" : "pointer",
+                      opacity: busyId && busyId !== o.orderId ? 0.5 : 1,
+                      border: o.stage === i ? "1px solid #181818" : "1px solid #E2E2DA",
+                      background: o.stage === i ? "#181818" : "#FFFFFF",
+                      color: o.stage === i ? "#FFFFFF" : "#6A6A64",
+                      transition: "all .2s ease",
+                    }}
+                  >
+                    {st.label}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}

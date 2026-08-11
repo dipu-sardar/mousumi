@@ -93,6 +93,29 @@ until at least one row like this exists with their real login email.
 migrations before testing the staff panel on a project that hasn't seen it
 yet.
 
+## Order confirmation step (as of migration 0006)
+
+`0006_order_confirmation.sql` adds two stages at the front of the order
+lifecycle: **Pending** (a freshly placed order's default — nobody's looked
+at it yet) and **Confirmed** (the owner has reviewed and approved it).
+Everything after that is the same five stages as before, just shifted up
+by two — see the comment at the top of the migration file for the exact
+old-index → new-index mapping.
+
+Only admin can move an order out of Pending/Confirmed (a tailor's queue
+never shows an order that early anyway, since orders only get assigned to
+a tailor after fabric pickup, but the RPC enforces it either way). The
+staff panel's Orders tab surfaces pending orders in their own callout at
+the top with a one-click Confirm button, so they're never buried in the
+full list.
+
+**Not built yet, on purpose:** a Telegram (or any) notification when a new
+order lands in Pending. The owner will wire that up later — nothing here
+depends on it existing, and the Pending stage is exactly what a future
+notification would fire on (an insert into `orders` with `stage = 0`).
+
+**Run `0006_order_confirmation.sql`** in the SQL Editor after 0005.
+
 ## What's deliberately not in the schema yet
 
 - **`measurer` / `rider` staff roles.** The `staff.role` check constraint

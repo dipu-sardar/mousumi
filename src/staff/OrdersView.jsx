@@ -47,6 +47,13 @@ export default function OrdersView() {
     return orders.filter((o) => o.stage === i);
   }, [orders, stageFilter]);
 
+  // Stage 0 = Pending (see 0006_order_confirmation.sql) — every order sits
+  // here until the owner explicitly confirms it. Surfaced as its own
+  // callout, not just another row in the list, so a new order can't get
+  // missed the way it could scrolling past 30 already-confirmed ones.
+  const pending = useMemo(() => (orders || []).filter((o) => o.stage === 0), [orders]);
+  const confirm = (orderId) => patch(orderId, { stage: 1, statusLabel: STAGES[1].label }, { stage: 1, statusLabel: STAGES[1].label });
+
   if (error) return <div style={{ padding: "24px", borderRadius: "16px", background: "#F9E5E9", color: "#A32138", fontSize: "13px" }}>{error}</div>;
   if (orders === null) return <div style={{ color: "#9A9A92", fontSize: "13px" }}>লোড হচ্ছে…</div>;
 
@@ -54,6 +61,26 @@ export default function OrdersView() {
     <div>
       <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "26px" : "34px", fontWeight: 800, letterSpacing: "-1px", margin: "0 0 8px" }}>সব অর্ডার</h1>
       <div style={{ fontSize: "12.5px", color: "#9A9A92", marginBottom: "18px" }}>{orders.length} টা অর্ডার</div>
+
+      {pending.length > 0 && (
+        <div style={{ background: "#FBEFD2", border: "1px solid #F0DDA8", borderRadius: "20px", padding: isMobile ? "16px" : "20px", marginBottom: "24px" }}>
+          <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "11px", fontWeight: 800, letterSpacing: "1px", color: "#8A6512", marginBottom: "14px" }}>
+            {pending.length} টা অর্ডার কনফার্মেশনের অপেক্ষায়
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {pending.map((o) => (
+              <div key={o.orderId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", background: "rgba(255,255,255,0.55)", borderRadius: "14px", padding: "12px 16px" }}>
+                <div style={{ fontSize: "13px", color: "#5A4308" }}>
+                  <span style={{ fontFamily: "Outfit,sans-serif", fontWeight: 800 }}>{o.orderCode}</span> · {o.productShort} · {o.customerName}
+                </div>
+                <div onClick={() => confirm(o.orderId)} style={{ padding: "9px 18px", borderRadius: "20px", background: "#181818", color: "#fff", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "0.8px", cursor: "pointer", flexShrink: 0 }}>
+                  ✓ কনফার্ম করুন
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "24px" }}>
         <div onClick={() => setStageFilter("ALL")} style={chip(stageFilter === "ALL")}>

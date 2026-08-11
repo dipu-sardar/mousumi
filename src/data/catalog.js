@@ -151,7 +151,15 @@ export const FIELDS = [
   { k: "neckDepth", label: "Neck depth" },
 ];
 
+// Index 0 and 1 (Pending/Confirmed) are admin-only — a tailor's session
+// can't set an order to either (see staff_update_order_stage() in
+// supabase/migrations/0006_order_confirmation.sql), since confirming a
+// fresh order is the owner's call, not the stitching floor's. Every index
+// past that (2+) is business-as-usual and open to whichever staff member
+// the order is assigned to.
 export const STAGES = [
+  { label: "Pending", note: "We've received your order and are reviewing it before confirming." },
+  { label: "Confirmed", note: "Your order is confirmed — pickup will be scheduled next." },
   { label: "Fabric picked up", note: "Rider collected the fabric from your address." },
   { label: "Cutting", note: "Pattern drafted on your saved measurements." },
   { label: "Stitching", note: "On the machine floor — finishing and pressing next." },

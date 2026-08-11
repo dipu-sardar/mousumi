@@ -553,7 +553,7 @@ export function buildViewModel(state, actions) {
           { k: "Product", v: tracked.productShort },
           { k: "Order ID / SKU", v: tracked.id },
           { k: "Order date", v: tracked.date },
-          { k: tracked.stage >= 4 ? "Delivered on" : "Expected delivery", v: tracked.delivery },
+          { k: tracked.stage >= 6 ? "Delivered on" : "Expected delivery", v: tracked.delivery },
           { k: "Fabric", v: tracked.fabricSource },
           { k: "Assigned karigor", v: tracked.tailor },
         ]
@@ -564,7 +564,7 @@ export function buildViewModel(state, actions) {
     keyFacts: tracked
       ? [
           { k: "ORDER DATE", v: tracked.date },
-          { k: tracked.stage >= 4 ? "DELIVERED ON" : "EXPECTED DELIVERY", v: tracked.delivery },
+          { k: tracked.stage >= 6 ? "DELIVERED ON" : "EXPECTED DELIVERY", v: tracked.delivery },
           { k: "PICKUP SLOT", v: tracked.slot + " · " + tracked.day },
           { k: "ASSIGNED KARIGOR", v: tracked.tailor },
         ]
@@ -609,14 +609,31 @@ export function buildViewModel(state, actions) {
     printReceipt: () => {
       if (typeof window !== "undefined") window.print();
     },
-    trackStages: STAGES.map((st, i) => ({
-      label: st.label,
-      note: st.note,
-      onClick: () => setState({ stage: i }),
-      dotStyle: { width: "16px", height: "16px", borderRadius: "50%", flexShrink: 0, transition: "all .3s ease", background: i <= s.stage ? "#D32F4D" : "#E2E2DA", boxShadow: i === s.stage ? "0 0 0 6px rgba(211,47,77,0.16)" : "none" },
-      lineStyle: { width: "2px", flex: 1, minHeight: i === STAGES.length - 1 ? "0px" : "46px", background: i < s.stage ? "#D32F4D" : "#EFEFE9" },
-      titleStyle: { fontFamily: "Outfit,sans-serif", fontSize: "17px", fontWeight: i === s.stage ? 800 : 600, color: i <= s.stage ? "#181818" : "#B5B5AD" },
-    })),
+    trackStages: STAGES.map((st, i) => {
+      // The current stage's dot blinks like a live status light — not once
+      // it's the *last* stage (Delivered), since "still live" stops being
+      // true there; msPulse is the same keyframe global.css already ships,
+      // just not used anywhere yet.
+      const isCurrent = i === s.stage;
+      const isLive = isCurrent && i < STAGES.length - 1;
+      return {
+        label: st.label,
+        note: st.note,
+        onClick: () => setState({ stage: i }),
+        dotStyle: {
+          width: "16px",
+          height: "16px",
+          borderRadius: "50%",
+          flexShrink: 0,
+          transition: "all .3s ease",
+          background: i <= s.stage ? "#D32F4D" : "#E2E2DA",
+          boxShadow: isCurrent ? "0 0 0 6px rgba(211,47,77,0.16)" : "none",
+          animation: isLive ? "msPulse 1.6s ease-in-out infinite" : "none",
+        },
+        lineStyle: { width: "2px", flex: 1, minHeight: i === STAGES.length - 1 ? "0px" : "46px", background: i < s.stage ? "#D32F4D" : "#EFEFE9" },
+        titleStyle: { fontFamily: "Outfit,sans-serif", fontSize: "17px", fontWeight: i === s.stage ? 800 : 600, color: i <= s.stage ? "#181818" : "#B5B5AD" },
+      };
+    }),
 
     // ---------------- how it works ----------------
     howSteps: HOW_STEPS,

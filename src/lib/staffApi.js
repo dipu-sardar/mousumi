@@ -159,7 +159,12 @@ export function computeDashboardStats(orders) {
   const monthOrders = orders.filter((o) => o.createdAt && new Date(o.createdAt) >= monthStart);
   const monthRevenue = monthOrders.reduce((sum, o) => sum + o.total, 0);
   const byStage = STAGES.map((s, i) => ({ label: s.label, count: orders.filter((o) => o.stage === i).length }));
-  const pendingPickup = orders.filter((o) => o.stage === 0).length;
+  // Stage indices per 0006_order_confirmation.sql: 0 Pending, 1 Confirmed,
+  // 2 Fabric picked up, ... — "still needs pickup" is specifically
+  // Confirmed-but-not-yet-collected (1), not Pending (0), which hasn't
+  // even been approved yet.
+  const pendingConfirmation = orders.filter((o) => o.stage === 0).length;
+  const awaitingPickup = orders.filter((o) => o.stage === 1).length;
   const unpaid = orders.filter((o) => o.payStatus !== "Paid");
   const unpaidTotal = unpaid.reduce((sum, o) => sum + Math.max(0, o.total - o.advancePaid), 0);
 
@@ -169,7 +174,8 @@ export function computeDashboardStats(orders) {
     monthRevenue,
     monthOrderCount: monthOrders.length,
     byStage,
-    pendingPickup,
+    pendingConfirmation,
+    awaitingPickup,
     unpaidCount: unpaid.length,
     unpaidTotal,
   };
