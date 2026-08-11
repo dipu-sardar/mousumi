@@ -68,11 +68,38 @@ at the same time, since orders need real rows to (optionally) point at.
 **Run `0004_orders_go_live.sql` in the SQL Editor** the same way as the
 earlier migrations before testing this on a project that hasn't seen it yet.
 
+## Staff panel (as of migration 0005)
+
+`0005_staff_panel.sql` gives `staff` a real login (same email+OTP mechanism
+`customers` already uses) and two roles: `admin` (you — full read/write on
+orders, customers, addresses, designs, promo codes, staff) and `tailor`
+(stitching staff — a narrow queue with no pricing or customer contact info,
+and the only write they get is advancing an order's stage).
+
+**Staff sign-in is not self-service.** A `customers` row is created
+automatically on first login; a `staff` row is not — you create it first,
+then that email can log in at the staff panel. Run this in the SQL Editor
+for every staff member (change the values):
+
+```sql
+insert into staff (name, phone, email, role, active)
+values ('Your Name', '01712-000000', 'you@example.com', 'admin', true);
+```
+
+Use `role => 'tailor'` for stitching staff. Nobody reaches the staff panel
+until at least one row like this exists with their real login email.
+
+**Run `0005_staff_panel.sql`** in the SQL Editor the same way as the earlier
+migrations before testing the staff panel on a project that hasn't seen it
+yet.
+
 ## What's deliberately not in the schema yet
 
-- **Staff roles / who can update `orders.stage`.** The `staff` table exists,
-  but no policy lets anyone write order status yet — that's the "staff
-  panel" feature, designed together when you're ready to build it.
+- **`measurer` / `rider` staff roles.** The `staff.role` check constraint
+  still allows these (from 0001), but 0005 grants no access to them yet —
+  the owner is doing rider work personally for now, and home-visit
+  measurement staff don't have panel access yet either. Same migration
+  pattern as `tailor` when that's needed.
 - **Seed data for `reviews`.** Still the original prototype's demo content —
   don't load it as if it's real customer testimonials unless it is.
 - **Real payment processing.** "CONFIRM & PAY" records the chosen method

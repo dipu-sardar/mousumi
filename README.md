@@ -37,10 +37,10 @@ Requires Node.js 18+.
 index.html                   Vite entry HTML (fonts, meta tags, favicon)
 public/assets/                Product photos + the measurement-guide video
 src/
-  main.jsx                   App bootstrap
-  App.jsx                    Mounts the print receipt + the app shell
+  main.jsx                   Bootstrap — decides shop vs staff panel, see below
+  App.jsx                    Mounts the print receipt + the app shell (shop)
   context/
-    AppContext.jsx           All app state + actions (cart, auth, orders, …)
+    AppContext.jsx           All shop state + actions (cart, auth, orders, …)
     selectors.js              Derives everything a screen reads from that state
   data/
     catalog.js                Designs, categories, budgets, demo orders, offers…
@@ -51,12 +51,30 @@ src/
                                Order flow, Cart, Track, How it works, Offers,
                                Reviews, Account, Order confirmation)
     Receipt.jsx               Print-only invoice (triggered by "Print receipt")
+  staff/                     The staff panel — a second, separate app that
+                               shares this build but not App.jsx's state.
+                               StaffContext.jsx (auth only), StaffLogin,
+                               StaffLayout, AdminDashboard (full order
+                               management), TailorQueue (assigned orders,
+                               stage-only). See supabase/README.md for the
+                               roles/permissions and staff-login setup.
+  lib/
+    staffApi.js                Staff panel's Supabase calls (see supabase/README.md)
   styles/
     global.css                Reset, fonts, the full @keyframes library, print rules
     interactions.css          Hover/focus effects as reusable classes
+    responsive.css             Mobile Safari zoom fix + an overflow-x safety net
 implement/                    Original exported design (kept for reference,
                                not part of the build — see .gitignore)
 ```
+
+**Shop vs staff panel:** `main.jsx` picks one of two completely separate
+apps before anything else renders — the shop (`App.jsx`) or the staff panel
+(`src/staff/StaffApp.jsx`) — based on hostname (`staff.mousumi.dipusardar.com`
+vs `mousumi.dipusardar.com`, both pointed at this same deployment) or, for
+local dev where there's only one hostname, a `/staff` path prefix
+(`localhost:5174/staff`). They share this repo/build/Supabase project but
+nothing else — no shared React state, no shared auth session.
 
 `context/selectors.js` is the heart of the app: one function that takes the
 current state and returns everything a page needs — computed labels, list
