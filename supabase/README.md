@@ -116,6 +116,19 @@ notification would fire on (an insert into `orders` with `stage = 0`).
 
 **Run `0006_order_confirmation.sql`** in the SQL Editor after 0005.
 
+## Per-item pickup tags (as of migration 0007)
+
+`0007_item_pickup_tags.sql` adds `order_items.position` — a 1-indexed slot
+per item within its order, assigned once at checkout. Nowhere stores the
+tag text itself; it's always computed as `order_code || '-' || position`
+(e.g. `MSM-2026-0150-2`), in `src/lib/staffApi.js` on the admin side and
+inline in `staff_order_queue()` on the tailor side. Short enough to write
+on a paper tag and pin to a physical piece of fabric — the point is
+telling apart several dresses from the same pickup, not a new identity
+system.
+
+**Run `0007_item_pickup_tags.sql`** in the SQL Editor after 0006.
+
 ## What's deliberately not in the schema yet
 
 - **`measurer` / `rider` staff roles.** The `staff.role` check constraint

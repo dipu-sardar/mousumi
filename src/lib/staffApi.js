@@ -16,7 +16,10 @@ const ADMIN_ORDER_SELECT = "*, order_items(*, designs(*)), addresses(*), measure
  *  `orders.id` (for updates) separate from the customer-facing
  *  `order_code`. */
 export function mapAdminOrderRow(row) {
-  const items = row.order_items || [];
+  // PostgREST doesn't guarantee embed order on its own — sort by `position`
+  // so item 1 is reliably item 1, both for the "primary" summary below and
+  // for the per-item pickup-tag breakdown OrdersView.jsx renders.
+  const items = (row.order_items || []).slice().sort((a, b) => a.position - b.position);
   const primary = items[0] ? items[0].designs : null;
   const extra = items.length - 1;
   const addr = row.addresses;
@@ -31,6 +34,12 @@ export function mapAdminOrderRow(row) {
     productShort: primary ? primary.short + (extra > 0 ? ` +${extra} more` : "") : "Order",
     productImg: primary ? primary.img_url : "",
     fabric: items[0] ? items[0].fabric : "",
+    items: items.map((it) => ({
+      pickupTag: row.order_code + "-" + it.position, // see 0007_item_pickup_tags.sql
+      short: (it.designs && it.designs.short) || it.design_id,
+      fabric: it.fabric,
+      qty: it.qty,
+    })),
     stage: row.stage,
     statusLabel: row.status_label,
     payStatus: row.pay_status,
@@ -56,6 +65,7 @@ export function mapQueueRow(row) {
   return {
     orderId: row.order_id,
     orderCode: row.order_code,
+    pickupTag: row.pickup_tag, // see 0007_item_pickup_tags.sql — write this on the paper tag pinned to the fabric
     designName: (row.design_name || "").replace(/\n/g, " "),
     designImg: row.design_img,
     fabric: row.fabric,

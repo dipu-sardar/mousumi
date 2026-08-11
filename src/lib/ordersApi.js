@@ -16,7 +16,10 @@ const ORDER_SELECT = "*, order_items(*, designs(*)), addresses(*), measurement_p
  *  shown as the headline product with a "+N more" suffix, same pattern
  *  trackSummary already used for the pre-checkout cart preview. */
 export function mapOrderRow(row) {
-  const items = row.order_items || [];
+  // PostgREST doesn't guarantee embed order — sort by `position` so
+  // "item 1" (the headline product below) is reliably the first one
+  // added at checkout, not whatever order Postgres happened to return.
+  const items = (row.order_items || []).slice().sort((a, b) => a.position - b.position);
   const primary = items[0] ? items[0].designs : null;
   const extra = items.length - 1;
   const addr = row.addresses;
@@ -34,7 +37,14 @@ export function mapOrderRow(row) {
     productShort: primary ? primary.short + (extra > 0 ? ` +${extra} more` : "") : "Order",
     productCategory: primary ? primary.category : "",
     productImg: primary ? primary.img_url : "",
-    items: items.map((it) => ({ designId: it.design_id, short: (it.designs && it.designs.short) || it.design_id, fabric: it.fabric, qty: it.qty, unitPrice: it.unit_price })),
+    items: items.map((it) => ({
+      designId: it.design_id,
+      short: (it.designs && it.designs.short) || it.design_id,
+      fabric: it.fabric,
+      qty: it.qty,
+      unitPrice: it.unit_price,
+      pickupTag: row.order_code + "-" + it.position, // see 0007_item_pickup_tags.sql
+    })),
     stage: row.stage,
     status: row.status_label,
     live: row.stage < 6, // 6 = Delivered, the last of STAGES (catalog.js) — see 0006_order_confirmation.sql for the full index map
@@ -101,7 +111,9 @@ export async function placeOrder({ customerId, measureMethod, measurementProfile
     .single();
   if (orderErr) throw orderErr;
 
-  const rows = items.map((it) => ({ order_id: order.id, design_id: it.designId, fabric: it.fabric, qty: it.qty, unit_price: it.unitPrice }));
+  // `position` (1-indexed per order) is what turns into the pickup tag
+  // later — order_code + "-" + position — see 0007_item_pickup_tags.sql.
+  const rows = items.map((it, i) => ({ order_id: order.id, design_id: it.designId, fabric: it.fabric, qty: it.qty, unit_price: it.unitPrice, position: i + 1 }));
   const { error: itemsErr } = await supabase.from("order_items").insert(rows);
   if (itemsErr) throw itemsErr;
 

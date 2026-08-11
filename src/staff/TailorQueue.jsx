@@ -62,8 +62,10 @@ export default function TailorQueue() {
                 <div role="img" aria-label={o.designName} style={{ width: "100%", height: "100%", backgroundImage: `url(${o.designImg})`, backgroundPosition: "50% 18%", backgroundSize: "cover" }} />
               </div>
               <div style={{ flex: 1, minWidth: "180px" }}>
-                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.4px", color: "#9A9A92" }}>{o.orderCode}</div>
-                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "15px", fontWeight: 700, marginTop: "4px" }}>{o.designName}</div>
+                {/* The tag to write on the paper pinned to this piece of
+                    fabric — see 0007_item_pickup_tags.sql. */}
+                <div style={{ display: "inline-block", fontFamily: "monospace", fontSize: "13px", fontWeight: 700, letterSpacing: "0.3px", background: "#F3F3EF", borderRadius: "8px", padding: "3px 9px" }}>{o.pickupTag}</div>
+                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "15px", fontWeight: 700, marginTop: "6px" }}>{o.designName}</div>
                 <div style={{ fontSize: "12px", color: "#6A6A64", marginTop: "4px" }}>
                   {o.fabric} {o.qty > 1 ? "· ×" + o.qty : ""} · ডেলিভারি {o.expectedDelivery}
                 </div>

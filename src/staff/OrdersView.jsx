@@ -121,6 +121,29 @@ export default function OrdersView() {
               </div>
             </div>
 
+            {/* One tag per physical piece — write this on paper and pin it
+                to the fabric at pickup, so multiple dresses from the same
+                customer never get mixed up. See 0007_item_pickup_tags.sql. */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "14px" }}>
+              {(o.items || []).map((it) => (
+                <div
+                  key={it.pickupTag}
+                  onClick={() => {
+                    if (typeof navigator !== "undefined" && navigator.clipboard) navigator.clipboard.writeText(it.pickupTag).catch(() => {});
+                    flash("ট্যাগ কপি হয়েছে — " + it.pickupTag);
+                  }}
+                  title="ক্লিক করে কপি করো"
+                  style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 12px", borderRadius: "10px", background: "#F3F3EF", cursor: "pointer" }}
+                >
+                  <span style={{ fontFamily: "monospace", fontSize: "12.5px", fontWeight: 700, letterSpacing: "0.3px" }}>{it.pickupTag}</span>
+                  <span style={{ fontSize: "11px", color: "#9A9A92" }}>
+                    {it.short} · {it.fabric}
+                    {it.qty > 1 ? " ×" + it.qty : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+
             <div style={{ fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.2px", color: "#B5B5AD", margin: "18px 0 8px" }}>স্টেজ</div>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {STAGES.map((st, i) => (
