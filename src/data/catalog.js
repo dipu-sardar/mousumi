@@ -151,7 +151,15 @@ export const FIELDS = [
   { k: "neckDepth", label: "Neck depth" },
 ];
 
+// Index 0 and 1 (Pending/Confirmed) are admin-only — a tailor's session
+// can't set an order to either (see staff_update_order_stage() in
+// supabase/migrations/0006_order_confirmation.sql), since confirming a
+// fresh order is the owner's call, not the stitching floor's. Every index
+// past that (2+) is business-as-usual and open to whichever staff member
+// the order is assigned to.
 export const STAGES = [
+  { label: "Pending", note: "We've received your order and are reviewing it before confirming." },
+  { label: "Confirmed", note: "Your order is confirmed — pickup will be scheduled next." },
   { label: "Fabric picked up", note: "Rider collected the fabric from your address." },
   { label: "Cutting", note: "Pattern drafted on your saved measurements." },
   { label: "Stitching", note: "On the machine floor — finishing and pressing next." },
@@ -163,6 +171,22 @@ export const STAGES = [
 // now (Supabase `orders`/`order_items`, see src/lib/ordersApi.js and
 // supabase/migrations/0004_orders_go_live.sql). Track/Account read live
 // data instead of this file for order history.
+
+// Payment methods offered at checkout — the single place that controls
+// which ones a customer can actually select (selectors.js `payMethods`
+// reads this; nothing else hardcodes the list). Online gateways
+// (bKash/Nagad/Rocket/Card) aren't wired up to a real payment provider yet
+// — see README.md's "what's real vs simulated" — so they're switched off
+// here rather than left selectable for something that can't actually be
+// charged. Flip `enabled` back to `true` (and update `note`) once a
+// gateway is live; nothing else needs to change.
+export const PAYMENT_METHODS = [
+  { key: "Cash", note: "পিকআপ বা ডেলিভারিতে সরাসরি হাতে টাকা পরিশোধ", enabled: true },
+  { key: "bKash", note: "শীঘ্রই আসছে", enabled: false },
+  { key: "Nagad", note: "শীঘ্রই আসছে", enabled: false },
+  { key: "Rocket", note: "শীঘ্রই আসছে", enabled: false },
+  { key: "Card", note: "শীঘ্রই আসছে", enabled: false },
+];
 
 export const OFFERS = [
   { tag: "EID SPECIAL", value: "৳200 OFF", desc: "On any order above ৳1000 placed before 20 August.", code: "EID26", tone: "#E4F0D2" },

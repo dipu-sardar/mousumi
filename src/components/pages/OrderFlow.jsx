@@ -20,6 +20,7 @@ export default function OrderFlow() {
     savedAddresses,
     newAddress,
     payMethods,
+    onlinePaymentsOff,
     promo,
     onPromo,
     applyPromo,
@@ -205,7 +206,18 @@ export default function OrderFlow() {
           {stepPay && (
             <div style={{ animation: "msFadeUp .45s cubic-bezier(0.22,1,0.36,1) both" }}>
               <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "28px" : "38px", fontWeight: 800, letterSpacing: "-1.4px", margin: "0 0 8px" }}>PAYMENT</h2>
-              <p style={{ fontSize: "14px", color: "#6A6A64", margin: "0 0 26px", maxWidth: "520px", lineHeight: 1.65 }}>Pay a 30% advance now and the rest on delivery, or settle the full amount today.</p>
+              <p style={{ fontSize: "14px", color: "#6A6A64", margin: "0 0 16px", maxWidth: "520px", lineHeight: 1.65 }}>Pay in cash — our rider collects it at pickup, or settle the full amount on delivery.</p>
+
+              {onlinePaymentsOff && (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "9px 18px", borderRadius: "30px", background: "#F3E6F0", color: "#7A3B63", fontSize: "12.5px", fontWeight: 600, margin: "0 0 22px" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <rect x="1" y="4" width="22" height="16" rx="2" />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                    <line x1="5" y1="21" x2="19" y2="3" />
+                  </svg>
+                  <span>অনলাইন পেমেন্ট (bKash/Nagad/Rocket/Card) এখন বন্ধ আছে — শুধু ক্যাশ গ্রহণযোগ্য।</span>
+                </div>
+              )}
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "14px", marginBottom: "26px" }}>
                 {payMethods.map((p) => (
