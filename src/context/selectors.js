@@ -1,4 +1,4 @@
-import { BUDGETS, CATS, DESIGNS, FIELDS, HOW_STEPS, OFFERS, RATING_BARS, REVIEWS, SHOP_STATS, STAGES, tk } from "../data/catalog.js";
+import { BUDGETS, CATS, DESIGNS, FIELDS, HOW_STEPS, OFFERS, PAYMENT_METHODS, RATING_BARS, REVIEWS, SHOP_STATS, STAGES, tk } from "../data/catalog.js";
 
 /**
  * Builds the view-model the whole UI reads from — one call per render.
@@ -174,7 +174,10 @@ export function buildViewModel(state, actions) {
       if (e && e.stopPropagation) e.stopPropagation();
       setState((st) => ({ homeIdx: (st.homeIdx + 1) % DESIGNS.length }));
     },
-    trustPills: [{ label: "3 months free alteration" }, { label: "Doorstep pickup" }, { label: "Female staff for home visits" }, { label: "bKash · Nagad · Rocket" }],
+    // Last pill used to name the (currently disabled) online gateways —
+    // swapped for what's actually accepted right now. See PAYMENT_METHODS
+    // in catalog.js if this needs to change back.
+    trustPills: [{ label: "3 months free alteration" }, { label: "Doorstep pickup" }, { label: "Female staff for home visits" }, { label: "Cash on pickup/delivery" }],
 
     // ---------------- catalogue ----------------
     cat: s.cat === "ALL" ? "ALL DESIGNS" : s.cat,
@@ -318,16 +321,30 @@ export function buildViewModel(state, actions) {
     cancelAddr: () => setState({ addrEditId: "", draftAddr: null }),
     addressCount: s.addresses.length + " SAVED ADDRESS" + (s.addresses.length === 1 ? "" : "ES"),
 
-    payMethods: [
-      { label: "bKash", note: "Instant · most used" },
-      { label: "Nagad", note: "Instant" },
-      { label: "Rocket", note: "Instant" },
-      { label: "Card", note: "Visa / Mastercard" },
-    ].map((p) => ({
-      ...p,
-      onClick: () => setState({ pay: p.label }),
-      style: { display: "flex", alignItems: "center", gap: "14px", padding: "18px", borderRadius: "18px", cursor: "pointer", transition: "all .25s ease", background: "#FFFFFF", border: s.pay === p.label ? "1.5px solid #181818" : "1.5px solid #EDEDE6" },
-      dotStyle: { width: "18px", height: "18px", borderRadius: "50%", flexShrink: 0, transition: "all .25s ease", border: s.pay === p.label ? "5px solid #D32F4D" : "5px solid #E2E2DA" },
+    // Only PAYMENT_METHODS entries with enabled:true are clickable — see
+    // the comment there for why the online gateways are off. A disabled
+    // card still renders (so it's visibly "coming soon", not just
+    // missing) but its onClick is a no-op and it can never carry the
+    // selected (`s.pay === p.key`) highlight, since s.pay only ever holds
+    // an enabled method's key (see AppContext.jsx's initialState).
+    onlinePaymentsOff: PAYMENT_METHODS.filter((p) => p.key !== "Cash").every((p) => !p.enabled),
+    payMethods: PAYMENT_METHODS.map((p) => ({
+      label: p.key,
+      note: p.note,
+      onClick: p.enabled ? () => setState({ pay: p.key }) : undefined,
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "14px",
+        padding: "18px",
+        borderRadius: "18px",
+        cursor: p.enabled ? "pointer" : "not-allowed",
+        opacity: p.enabled ? 1 : 0.5,
+        transition: "all .25s ease",
+        background: "#FFFFFF",
+        border: s.pay === p.key ? "1.5px solid #181818" : "1.5px solid #EDEDE6",
+      },
+      dotStyle: { width: "18px", height: "18px", borderRadius: "50%", flexShrink: 0, transition: "all .25s ease", border: s.pay === p.key ? "5px solid #D32F4D" : "5px solid #E2E2DA" },
     })),
     promo: s.promo,
     onPromo: (e) => setState({ promo: e.target.value }),
@@ -343,7 +360,12 @@ export function buildViewModel(state, actions) {
     orderTotal: tk(total),
     orderSubmitting: s.orderSubmitting,
     orderError: s.orderError,
-    orderPrimaryLabel: s.orderSubmitting ? "PLACING ORDER…" : s.orderStep === 3 ? "CONFIRM & PAY " + tk(total) : "CONTINUE",
+    // "CONFIRM & PAY" implied money moves right now, which was already
+    // never quite true (checkout never called a real gateway — every
+    // order lands Unpaid regardless of method, see placeOrder() in
+    // ordersApi.js) but reads as flatly wrong now that Cash is the only
+    // option: nothing is "paid" until the rider is standing there.
+    orderPrimaryLabel: s.orderSubmitting ? "PLACING ORDER…" : s.orderStep === 3 ? "CONFIRM ORDER — " + tk(total) : "CONTINUE",
     orderPrimary: () => {
       if (s.orderStep < 3) {
         setState({ orderStep: s.orderStep + 1 });

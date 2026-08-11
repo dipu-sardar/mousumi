@@ -49,8 +49,8 @@ export default function HowItWorks() {
 
       <div style={{ overflow: "hidden", borderBottom: "1px solid #E8E8E2", padding: "20px 0", background: "#F9F9F7" }}>
         <div style={{ display: "flex", width: "max-content", animation: "msMarquee 28s linear infinite", fontFamily: "Outfit,sans-serif", fontSize: "14px", fontWeight: 800, letterSpacing: "4px" }}>
-          <span style={{ paddingRight: "40px" }}>DOORSTEP PICKUP — SAVED MEASUREMENTS — 3 MONTHS FREE ALTERATION — bKash · NAGAD · ROCKET — DOORSTEP PICKUP — SAVED MEASUREMENTS — 3 MONTHS FREE ALTERATION — </span>
-          <span style={{ paddingRight: "40px" }}>DOORSTEP PICKUP — SAVED MEASUREMENTS — 3 MONTHS FREE ALTERATION — bKash · NAGAD · ROCKET — DOORSTEP PICKUP — SAVED MEASUREMENTS — 3 MONTHS FREE ALTERATION — </span>
+          <span style={{ paddingRight: "40px" }}>DOORSTEP PICKUP — SAVED MEASUREMENTS — 3 MONTHS FREE ALTERATION — CASH ON PICKUP/DELIVERY — DOORSTEP PICKUP — SAVED MEASUREMENTS — 3 MONTHS FREE ALTERATION — </span>
+          <span style={{ paddingRight: "40px" }}>DOORSTEP PICKUP — SAVED MEASUREMENTS — 3 MONTHS FREE ALTERATION — CASH ON PICKUP/DELIVERY — DOORSTEP PICKUP — SAVED MEASUREMENTS — 3 MONTHS FREE ALTERATION — </span>
         </div>
       </div>
 

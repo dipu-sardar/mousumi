@@ -172,6 +172,22 @@ export const STAGES = [
 // supabase/migrations/0004_orders_go_live.sql). Track/Account read live
 // data instead of this file for order history.
 
+// Payment methods offered at checkout — the single place that controls
+// which ones a customer can actually select (selectors.js `payMethods`
+// reads this; nothing else hardcodes the list). Online gateways
+// (bKash/Nagad/Rocket/Card) aren't wired up to a real payment provider yet
+// — see README.md's "what's real vs simulated" — so they're switched off
+// here rather than left selectable for something that can't actually be
+// charged. Flip `enabled` back to `true` (and update `note`) once a
+// gateway is live; nothing else needs to change.
+export const PAYMENT_METHODS = [
+  { key: "Cash", note: "পিকআপ বা ডেলিভারিতে সরাসরি হাতে টাকা পরিশোধ", enabled: true },
+  { key: "bKash", note: "শীঘ্রই আসছে", enabled: false },
+  { key: "Nagad", note: "শীঘ্রই আসছে", enabled: false },
+  { key: "Rocket", note: "শীঘ্রই আসছে", enabled: false },
+  { key: "Card", note: "শীঘ্রই আসছে", enabled: false },
+];
+
 export const OFFERS = [
   { tag: "EID SPECIAL", value: "৳200 OFF", desc: "On any order above ৳1000 placed before 20 August.", code: "EID26", tone: "#E4F0D2" },
   { tag: "FIRST ORDER", value: "15% OFF", desc: "For new customers — applies to stitching charge only.", code: "FIRST15", tone: "#FBEFD2" },

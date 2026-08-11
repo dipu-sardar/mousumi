@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FIELDS } from "../data/catalog.js";
+import { FIELDS, PAYMENT_METHODS } from "../data/catalog.js";
 import { buildViewModel } from "./selectors.js";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 import { mapCustomerToAccount, makeReferralCode } from "../lib/customerMapper.js";
@@ -110,7 +110,7 @@ const initialState = {
   authError: "",
   authNext: "",
 
-  pay: "bKash",
+  pay: (PAYMENT_METHODS.find((p) => p.enabled) || {}).key || "Cash", // first enabled method in catalog.js — never a disabled/online one
   promo: "",
   promoOk: false,
 
