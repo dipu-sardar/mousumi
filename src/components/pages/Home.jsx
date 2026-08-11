@@ -1,4 +1,6 @@
 import { useApp } from "../../context/AppContext.jsx";
+import { useViewport } from "../../hooks/useViewport.js";
+import { HEADER_HEIGHT } from "../layout/Header.jsx";
 
 /**
  * Home is mainly a brand statement — identity copy on the left, one real
@@ -8,6 +10,7 @@ import { useApp } from "../../context/AppContext.jsx";
  */
 export default function Home() {
   const { goCatalogue, goHow, trustPills, stats, identityDesign, identityPhotoStyle, goIdentityDesign, prevIdentityDesign, nextIdentityDesign } = useApp();
+  const { isDesktop, isMobile } = useViewport();
 
   const arrowBtnStyle = {
     position: "absolute",
@@ -26,20 +29,37 @@ export default function Home() {
     zIndex: 2,
   };
 
+  // Below desktop, the 5fr:6fr split has nowhere near enough width for a
+  // 58px headline next to a photo — stack photo-over-copy instead, and let
+  // the page scroll normally (drop the fixed viewport-height box; the photo
+  // section gets its own fixed band height instead of splitting 100% of the
+  // viewport height with the copy column below it).
   return (
-    <div style={{ height: "calc(100vh - 78px)", minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0, 5fr) minmax(0, 6fr)", animation: "msFadeIn 0.5s ease both" }}>
+    <div
+      style={
+        isDesktop
+          ? { height: "calc(100dvh - " + HEADER_HEIGHT.desktop + "px)", minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0, 5fr) minmax(0, 6fr)", animation: "msFadeIn 0.5s ease both" }
+          : { display: "flex", flexDirection: "column", animation: "msFadeIn 0.5s ease both" }
+      }
+    >
       {/* ---------- left: brand identity ---------- */}
-      <section style={{ padding: "0 40px 34px 56px", display: "flex", flexDirection: "column", justifyContent: "safe center", gap: "26px", overflowY: "auto", minHeight: 0, background: "#F9F9F7" }}>
+      <section
+        style={
+          isDesktop
+            ? { padding: "0 40px 34px 56px", display: "flex", flexDirection: "column", justifyContent: "safe center", gap: "26px", overflowY: "auto", minHeight: 0, background: "#F9F9F7" }
+            : { padding: isMobile ? "28px 20px 44px" : "36px 40px 52px", display: "flex", flexDirection: "column", gap: "22px", background: "#F9F9F7" }
+        }
+      >
         <div style={{ animation: "msFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both" }}>
           <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "11px", fontWeight: 800, letterSpacing: "2.6px", color: "#D32F4D", marginBottom: "16px" }}>SMART TAILORING — BARISHAL</div>
-          <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: "58px", fontWeight: 800, lineHeight: 0.98, letterSpacing: "-2px", textTransform: "uppercase", margin: 0 }}>
+          <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: isDesktop ? "58px" : isMobile ? "38px" : "48px", fontWeight: 800, lineHeight: 0.98, letterSpacing: "-2px", textTransform: "uppercase", margin: 0 }}>
             Stitched
             <br />
             to Your
             <br />
             Measure
           </h1>
-          <p style={{ maxWidth: "420px", margin: "20px 0 0", fontSize: "14.5px", lineHeight: 1.75, color: "#6A6A64", textWrap: "pretty" }}>
+          <p style={{ maxWidth: isDesktop ? "420px" : "560px", margin: "20px 0 0", fontSize: "14.5px", lineHeight: 1.75, color: "#6A6A64", textWrap: "pretty" }}>
             The same cutters and machinists who serve our walk-in customers in Barishal stitch every order placed here. Our rider collects the fabric from your door and brings back the finished piece — with three months of free alterations.
           </p>
         </div>
@@ -54,10 +74,10 @@ export default function Home() {
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "22px", maxWidth: "440px", animation: "msFadeUp 0.9s cubic-bezier(0.22,1,0.36,1) both" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: isMobile ? "12px" : "22px", maxWidth: isDesktop ? "440px" : "560px", animation: "msFadeUp 0.9s cubic-bezier(0.22,1,0.36,1) both" }}>
           {stats.map((st) => (
             <div key={st.t} style={{ borderTop: "2px solid #181818", paddingTop: "12px" }}>
-              <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "26px", fontWeight: 800, letterSpacing: "-1px" }}>{st.n}</div>
+              <div style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "21px" : "26px", fontWeight: 800, letterSpacing: "-1px" }}>{st.n}</div>
               <div style={{ fontSize: "11.5px", color: "#6A6A64", marginTop: "5px", lineHeight: 1.5 }}>{st.t}</div>
             </div>
           ))}
@@ -74,7 +94,13 @@ export default function Home() {
       </section>
 
       {/* ---------- right: the real product, as a brand photo ---------- */}
-      <section style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", minWidth: 0, background: identityDesign.tone, transition: "background-color .6s ease" }}>
+      <section
+        style={
+          isDesktop
+            ? { position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", minWidth: 0, background: identityDesign.tone, transition: "background-color .6s ease" }
+            : { position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", height: isMobile ? "360px" : "460px", background: identityDesign.tone, transition: "background-color .6s ease" }
+        }
+      >
         <div style={{ position: "absolute", top: "13%", left: "10%", animation: "msFloat 4s ease-in-out infinite alternate" }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D32F4D" strokeWidth="3" strokeLinecap="round">
             <line x1="4" y1="4" x2="20" y2="20" />

@@ -23,7 +23,7 @@ export default function AppShell() {
   const { scrollRef, isHome, isCatalogue, isDesign, isOrder, isCart, isTrack, isHow, isOffers, isReviews, isAccount, isDone } = useApp();
 
   return (
-    <div id="ms-app" style={{ width: "100%", height: "100vh", display: "flex", flexDirection: "column", background: "#F9F9F7", color: "#181818", fontFamily: "'Plus Jakarta Sans',sans-serif", overflow: "hidden" }}>
+    <div id="ms-app" style={{ width: "100%", height: "100dvh", display: "flex", flexDirection: "column", background: "#F9F9F7", color: "#181818", fontFamily: "'Plus Jakarta Sans',sans-serif", overflow: "hidden" }}>
       <Header />
 
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>

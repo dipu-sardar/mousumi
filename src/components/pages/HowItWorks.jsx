@@ -1,14 +1,26 @@
 import { useApp } from "../../context/AppContext.jsx";
+import { useViewport } from "../../hooks/useViewport.js";
 
 export default function HowItWorks() {
   const { goOrderMeasure, howSteps, stats } = useApp();
+  const { isDesktop, isMobile } = useViewport();
 
   return (
     <div style={{ animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both", paddingBottom: "90px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 380px) minmax(0, 1fr)", gap: "44px", alignItems: "center", padding: "52px 56px 56px", background: "#F3F3EF", borderBottom: "1px solid #E8E8E2" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isDesktop ? "minmax(0, 380px) minmax(0, 1fr)" : "minmax(0,1fr)",
+          gap: isMobile ? "26px" : "44px",
+          alignItems: "center",
+          padding: isMobile ? "32px 20px 36px" : isDesktop ? "52px 56px 56px" : "40px 40px 44px",
+          background: "#F3F3EF",
+          borderBottom: "1px solid #E8E8E2",
+        }}
+      >
         <div>
           <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "11px", fontWeight: 800, letterSpacing: "2.6px", color: "#D32F4D" }}>MEASUREMENT GUIDE</div>
-          <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "52px", fontWeight: 800, letterSpacing: "-2px", lineHeight: 1, margin: "16px 0 0" }}>
+          <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "34px" : "52px", fontWeight: 800, letterSpacing: "-2px", lineHeight: 1, margin: "16px 0 0" }}>
             MEASURE
             <br />
             AT HOME
@@ -42,8 +54,8 @@ export default function HowItWorks() {
         </div>
       </div>
 
-      <div style={{ padding: "64px 56px 0" }}>
-        <h3 style={{ fontFamily: "Outfit,sans-serif", fontSize: "34px", fontWeight: 800, letterSpacing: "-1.2px", margin: "0 0 30px" }}>FIVE STEPS, START TO FINISH</h3>
+      <div style={{ padding: isMobile ? "40px 20px 0" : "64px 56px 0" }}>
+        <h3 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "26px" : "34px", fontWeight: 800, letterSpacing: "-1.2px", margin: "0 0 30px" }}>FIVE STEPS, START TO FINISH</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: "20px" }}>
           {howSteps.map((h) => (
             <div key={h.n} className="hv-lift-5-border-dark" style={{ background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "22px", padding: "24px", transition: "transform .3s cubic-bezier(0.22,1,0.36,1), border-color .3s ease" }}>
@@ -55,18 +67,18 @@ export default function HowItWorks() {
         </div>
       </div>
 
-      <div style={{ padding: "64px 56px 0", display: "grid", gridTemplateColumns: "1.35fr 1fr", gap: "26px" }}>
-        <div style={{ height: "400px", borderRadius: "26px", overflow: "hidden", background: "#EFEFE9" }}>
+      <div style={{ padding: isMobile ? "40px 20px 0" : "64px 56px 0", display: "grid", gridTemplateColumns: isDesktop ? "1.35fr 1fr" : "minmax(0,1fr)", gap: "26px" }}>
+        <div style={{ height: isDesktop ? "400px" : isMobile ? "220px" : "300px", borderRadius: "26px", overflow: "hidden", background: "#EFEFE9" }}>
           <div role="img" aria-label="Atelier" style={{ width: "100%", height: "100%", backgroundImage: "url(/assets/summer_banner.png)", backgroundPosition: "center", backgroundSize: "cover", backgroundRepeat: "no-repeat" }} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "22px", justifyContent: "center" }}>
           <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "11px", fontWeight: 800, letterSpacing: "2.6px", color: "#D32F4D" }}>THE SHOP</div>
-          <h3 style={{ fontFamily: "Outfit,sans-serif", fontSize: "38px", fontWeight: 800, letterSpacing: "-1.4px", lineHeight: 1.05, margin: 0 }}>A BARISHAL TAILORING FLOOR, NOW ONLINE.</h3>
+          <h3 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "27px" : "38px", fontWeight: 800, letterSpacing: "-1.4px", lineHeight: 1.05, margin: 0 }}>A BARISHAL TAILORING FLOOR, NOW ONLINE.</h3>
           <p style={{ fontSize: "14.5px", lineHeight: 1.8, color: "#6A6A64", margin: 0, textWrap: "pretty" }}>The same cutters and machinists who serve our walk-in customers stitch every online order. The website only removes the two trips you used to make.</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "18px", marginTop: "6px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: isMobile ? "10px" : "18px", marginTop: "6px" }}>
             {stats.map((st) => (
               <div key={st.t} style={{ borderTop: "2px solid #181818", paddingTop: "14px" }}>
-                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "32px", fontWeight: 800, letterSpacing: "-1.2px" }}>{st.n}</div>
+                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "23px" : "32px", fontWeight: 800, letterSpacing: "-1.2px" }}>{st.n}</div>
                 <div style={{ fontSize: "12px", color: "#6A6A64", marginTop: "5px", lineHeight: 1.55 }}>{st.t}</div>
               </div>
             ))}

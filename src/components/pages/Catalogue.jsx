@@ -1,14 +1,16 @@
 import { useApp } from "../../context/AppContext.jsx";
+import { useViewport } from "../../hooks/useViewport.js";
 
 export default function Catalogue() {
   const { cat, catChips, budgetChips, catalogueCount, catalogueDesigns } = useApp();
+  const { isMobile } = useViewport();
 
   return (
-    <div style={{ padding: "48px 56px 90px", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>
+    <div style={{ padding: isMobile ? "28px 18px 70px" : "48px 56px 90px", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "36px", flexWrap: "wrap", borderBottom: "1px solid #E8E8E2", paddingBottom: "28px" }}>
         <div>
           <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "11px", fontWeight: 800, letterSpacing: "2.6px", color: "#D32F4D" }}>DESIGN CATALOGUE</div>
-          <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "58px", fontWeight: 800, letterSpacing: "-2px", lineHeight: 1, margin: "14px 0 0", textTransform: "uppercase" }}>{cat}</h2>
+          <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "36px" : "58px", fontWeight: 800, letterSpacing: "-2px", lineHeight: 1, margin: "14px 0 0", textTransform: "uppercase" }}>{cat}</h2>
         </div>
         <div style={{ display: "flex", gap: "9px", flexWrap: "wrap" }}>
           {catChips.map((c) => (

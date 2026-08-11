@@ -1,13 +1,15 @@
 import { useApp } from "../../context/AppContext.jsx";
+import { useViewport } from "../../hooks/useViewport.js";
 
 export default function AccountEditModal() {
   const { accountEditOpen, cancelAccount, accountFields, saveAccount } = useApp();
+  const { isMobile } = useViewport();
   if (!accountEditOpen) return null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 77, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px", background: "rgba(24,24,24,0.38)", backdropFilter: "blur(4px)", animation: "msFadeIn 0.25s ease both" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 77, display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "16px" : "40px", background: "rgba(24,24,24,0.38)", backdropFilter: "blur(4px)", animation: "msFadeIn 0.25s ease both" }}>
       <div onClick={cancelAccount} style={{ position: "absolute", inset: 0 }} />
-      <div style={{ position: "relative", width: "min(640px, 100%)", maxHeight: "100%", overflowY: "auto", background: "#F9F9F7", borderRadius: "26px", padding: "34px", boxShadow: "0 30px 80px rgba(0,0,0,0.24)", animation: "msRise 0.4s cubic-bezier(0.22,1,0.36,1) both" }}>
+      <div style={{ position: "relative", width: "min(640px, 100%)", maxHeight: "100%", overflowY: "auto", background: "#F9F9F7", borderRadius: "26px", padding: isMobile ? "24px 20px" : "34px", boxShadow: "0 30px 80px rgba(0,0,0,0.24)", animation: "msRise 0.4s cubic-bezier(0.22,1,0.36,1) both" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", marginBottom: "22px" }}>
           <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "11px", fontWeight: 800, letterSpacing: "2px", color: "#D32F4D" }}>EDIT ACCOUNT DETAILS</div>
           <div onClick={cancelAccount} className="hv-text-accent" style={{ cursor: "pointer", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.4px", color: "#9A9A92" }}>
