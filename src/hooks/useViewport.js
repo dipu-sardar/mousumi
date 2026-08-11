@@ -15,6 +15,16 @@ import { useEffect, useState } from "react";
  * directly — mirrors how pages already compute their own local style
  * objects (e.g. Home.jsx's `arrowBtnStyle`) rather than centralizing layout
  * decisions in selectors.js, which stays a pure function of app state.
+ *
+ * Gotcha for whoever adds the next `isMobile ? "1fr" : "…"` grid: use
+ * `"minmax(0,1fr)"`, never a bare `"1fr"`. A bare `1fr` track has an
+ * implicit `min-width: auto`, i.e. it won't shrink below its content's
+ * natural width — so a single stacked column holding a wide nested grid or
+ * an unwrapped flex row (an `inline-flex` badge is the classic case) can
+ * silently blow past the viewport and get clipped by the app shell's
+ * `overflow-x: hidden` instead of wrapping. Every desktop-only grid in this
+ * codebase already avoids this (`"minmax(0, 5fr) minmax(0, 6fr)"` etc.) —
+ * the mobile-stacked columns need the same treatment.
  */
 const QUERIES = {
   isMobile: "(max-width: 767px)",
