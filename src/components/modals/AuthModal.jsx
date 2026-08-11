@@ -1,13 +1,15 @@
 import { useApp } from "../../context/AppContext.jsx";
+import { useViewport } from "../../hooks/useViewport.js";
 
 export default function AuthModal() {
   const { authOpen, closeAuth, authTitle, authSub, authBusy, stepEmail, authEmail, onAuthEmail, sendOtp, stepOtp, authOtp, onAuthOtp, verifyOtp, backToEmail, stepName, authName, onAuthName, finishAuth, authError } = useApp();
+  const { isMobile } = useViewport();
   if (!authOpen) return null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 82, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px", background: "rgba(24,24,24,0.42)", backdropFilter: "blur(5px)", animation: "msFadeIn 0.25s ease both" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 82, display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "16px" : "40px", background: "rgba(24,24,24,0.42)", backdropFilter: "blur(5px)", animation: "msFadeIn 0.25s ease both" }}>
       <div onClick={closeAuth} style={{ position: "absolute", inset: 0 }} />
-      <div style={{ position: "relative", width: "min(460px, 100%)", background: "#F9F9F7", borderRadius: "28px", padding: "36px", boxShadow: "0 30px 80px rgba(0,0,0,0.26)", animation: "msRise 0.4s cubic-bezier(0.22,1,0.36,1) both" }}>
+      <div style={{ position: "relative", width: "min(460px, 100%)", maxHeight: "100%", overflowY: "auto", background: "#F9F9F7", borderRadius: "28px", padding: isMobile ? "26px 22px" : "36px", boxShadow: "0 30px 80px rgba(0,0,0,0.26)", animation: "msRise 0.4s cubic-bezier(0.22,1,0.36,1) both" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", marginBottom: "8px" }}>
           <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "11px", fontWeight: 800, letterSpacing: "2px", color: "#D32F4D" }}>{authTitle}</div>
           <div onClick={closeAuth} className="hv-text-accent" style={{ cursor: "pointer", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.4px", color: "#9A9A92" }}>

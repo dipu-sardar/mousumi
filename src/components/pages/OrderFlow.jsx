@@ -1,6 +1,8 @@
 import { useApp } from "../../context/AppContext.jsx";
+import { useViewport } from "../../hooks/useViewport.js";
 
 export default function OrderFlow() {
+  const { isMobile } = useViewport();
   const {
     orderSteps,
     stepMeasure,
@@ -34,7 +36,7 @@ export default function OrderFlow() {
   } = useApp();
 
   return (
-    <div style={{ padding: "44px 56px 90px", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>
+    <div style={{ padding: isMobile ? "26px 18px 70px" : "44px 56px 90px", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", marginBottom: "34px" }}>
         {orderSteps.map((o) => (
           <div key={o.n} onClick={o.onClick} style={o.style}>
@@ -44,11 +46,11 @@ export default function OrderFlow() {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,340px)", gap: "48px", alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "minmax(0,1fr) minmax(0,340px)", gap: isMobile ? "34px" : "48px", alignItems: "start" }}>
         <div>
           {stepMeasure && (
             <div style={{ animation: "msFadeUp .45s cubic-bezier(0.22,1,0.36,1) both" }}>
-              <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "38px", fontWeight: 800, letterSpacing: "-1.4px", margin: "0 0 8px" }}>MEASUREMENTS</h2>
+              <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "28px" : "38px", fontWeight: 800, letterSpacing: "-1.4px", margin: "0 0 8px" }}>MEASUREMENTS</h2>
               <p style={{ fontSize: "14px", color: "#6A6A64", margin: "0 0 22px", maxWidth: "520px", lineHeight: 1.65 }}>Pick a saved profile, take fresh measurements with the guide, or let our staff measure you at home.</p>
 
               <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.6px", color: "#9A9A92", marginBottom: "12px" }}>HOW WOULD YOU LIKE TO GIVE YOUR MEASUREMENTS?</div>
@@ -135,7 +137,7 @@ export default function OrderFlow() {
 
           {stepPickup && (
             <div style={{ animation: "msFadeUp .45s cubic-bezier(0.22,1,0.36,1) both" }}>
-              <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "38px", fontWeight: 800, letterSpacing: "-1.4px", margin: "0 0 8px" }}>PICKUP SLOT</h2>
+              <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "28px" : "38px", fontWeight: 800, letterSpacing: "-1.4px", margin: "0 0 8px" }}>PICKUP SLOT</h2>
               <p style={{ fontSize: "14px", color: "#6A6A64", margin: "0 0 16px", maxWidth: "520px", lineHeight: 1.65 }}>Choose when our rider should collect your fabric. Delivery of the finished dress follows the same slot.</p>
 
               <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "9px 18px", borderRadius: "30px", background: "#F3E6F0", color: "#7A3B63", fontSize: "12.5px", fontWeight: 600, margin: "0 0 26px", maxWidth: "520px", textAlign: "left" }}>
@@ -202,7 +204,7 @@ export default function OrderFlow() {
 
           {stepPay && (
             <div style={{ animation: "msFadeUp .45s cubic-bezier(0.22,1,0.36,1) both" }}>
-              <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "38px", fontWeight: 800, letterSpacing: "-1.4px", margin: "0 0 8px" }}>PAYMENT</h2>
+              <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "28px" : "38px", fontWeight: 800, letterSpacing: "-1.4px", margin: "0 0 8px" }}>PAYMENT</h2>
               <p style={{ fontSize: "14px", color: "#6A6A64", margin: "0 0 26px", maxWidth: "520px", lineHeight: 1.65 }}>Pay a 30% advance now and the rest on delivery, or settle the full amount today.</p>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "14px", marginBottom: "26px" }}>
@@ -235,7 +237,7 @@ export default function OrderFlow() {
           )}
         </div>
 
-        <div style={{ background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "24px", padding: "26px", boxShadow: "0 16px 40px rgba(0,0,0,0.04)", position: "sticky", top: "20px" }}>
+        <div style={{ background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "24px", padding: "26px", boxShadow: "0 16px 40px rgba(0,0,0,0.04)", position: isMobile ? "static" : "sticky", top: "20px" }}>
           <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.8px", color: "#9A9A92", marginBottom: "18px" }}>ORDER SUMMARY</div>
           <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "18px" }}>
             {orderLines.map((l, i) => (

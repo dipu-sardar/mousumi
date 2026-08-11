@@ -1,14 +1,16 @@
 import { useApp } from "../../context/AppContext.jsx";
+import { useViewport } from "../../hooks/useViewport.js";
 
 export default function Reviews() {
   const { ratingBars, reviews } = useApp();
+  const { isMobile } = useViewport();
 
   return (
-    <div style={{ padding: "48px 56px 90px", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>
+    <div style={{ padding: isMobile ? "28px 18px 70px" : "48px 56px 90px", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>
       <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "11px", fontWeight: 800, letterSpacing: "2.6px", color: "#D32F4D" }}>CUSTOMER REVIEWS</div>
-      <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "56px", fontWeight: 800, letterSpacing: "-2px", margin: "14px 0 34px" }}>WHAT THEY SAY</h2>
+      <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "32px" : "56px", fontWeight: 800, letterSpacing: "-2px", margin: "14px 0 34px" }}>WHAT THEY SAY</h2>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,300px) minmax(0,1fr)", gap: "44px", alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "minmax(0,300px) minmax(0,1fr)", gap: isMobile ? "24px" : "44px", alignItems: "start" }}>
         <div style={{ background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "24px", padding: "28px" }}>
           <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "64px", fontWeight: 800, letterSpacing: "-3px", lineHeight: 1 }}>4.8</div>
           <div style={{ fontSize: "12.5px", color: "#9A9A92", margin: "10px 0 22px" }}>based on 412 delivered orders</div>

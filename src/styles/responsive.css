@@ -1,0 +1,40 @@
+/*
+ * Small global safety nets for responsive layout that don't fit the
+ * "compute a style object per breakpoint" pattern used in the page
+ * components (see src/hooks/useViewport.js). Everything here is either a
+ * one-line browser-quirk fix or a last-resort guard against horizontal
+ * scroll — the actual layout work (stacking grids, scaling type) happens
+ * per-component via useViewport().
+ */
+
+html {
+  /* Stops iOS/Android from auto-bumping font sizes on rotation, which would
+     throw off every hand-tuned font-size in the app. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  /* #ms-app (AppShell) owns its own height/scroll; this is just a guard so
+     one stray fixed-width element on a new/edited page can't open a
+     page-level horizontal scrollbar underneath it. */
+  overflow-x: hidden;
+}
+
+/* iOS Safari zooms the whole page in when a focused input's computed
+   font-size is under 16px. Several inputs in the app (measurement fields,
+   address/profile editors, promo code) use 14px to match their card design
+   on desktop — bump them to 16px on phones, where the zoom bug actually
+   happens (unconditionally, not just on :focus, so the text doesn't visibly
+   jump size the moment you tap in). Desktop/tablet keep the original 14px.
+   `!important` mirrors the same mechanism interactions.css uses for
+   hover/focus states, for the same reason: it must win over the element's
+   own inline font-size. */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}

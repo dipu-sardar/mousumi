@@ -1,11 +1,30 @@
 import { useApp } from "../../context/AppContext.jsx";
+import { useViewport } from "../../hooks/useViewport.js";
+import { HEADER_HEIGHT } from "../layout/Header.jsx";
 
 export default function DesignDetail() {
   const { goCatalogue, design, startOrder, addToCart, designThumbs, designCircleStyle, designImageStyle } = useApp();
+  const { isDesktop, isMobile } = useViewport();
 
+  // Same reasoning as Home: the 420px:1fr split needs real width to work,
+  // so below desktop this stacks — photo on top (`order: -1`, DOM stays as
+  // written), details below, page scrolling normally instead of being
+  // pinned to one viewport-height screen.
   return (
-    <div style={{ height: "calc(100vh - 78px)", minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0, 420px) minmax(0, 1fr)", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>
-      <section style={{ padding: "28px 26px 32px 48px", display: "flex", flexDirection: "column", justifyContent: "safe center", overflowY: "auto", minHeight: 0 }}>
+    <div
+      style={
+        isDesktop
+          ? { height: "calc(100dvh - " + HEADER_HEIGHT.desktop + "px)", minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0, 420px) minmax(0, 1fr)", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }
+          : { display: "flex", flexDirection: "column", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }
+      }
+    >
+      <section
+        style={
+          isDesktop
+            ? { padding: "28px 26px 32px 48px", display: "flex", flexDirection: "column", justifyContent: "safe center", overflowY: "auto", minHeight: 0 }
+            : { padding: isMobile ? "24px 20px 40px" : "30px 40px 46px", display: "flex", flexDirection: "column" }
+        }
+      >
         <div onClick={goCatalogue} className="hv-text-accent" style={{ display: "inline-flex", alignItems: "center", gap: "9px", fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.6px", color: "#6A6A64", cursor: "pointer", marginBottom: "24px" }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12" />
@@ -14,12 +33,12 @@ export default function DesignDetail() {
           <span>BACK TO CATALOGUE</span>
         </div>
         <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "2px", color: "#D32F4D", marginBottom: "10px" }}>{design.category}</div>
-        <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: "40px", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-1.2px", textTransform: "uppercase", whiteSpace: "pre-line", margin: 0 }}>{design.name}</h1>
+        <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: isDesktop ? "40px" : isMobile ? "28px" : "34px", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-1.2px", textTransform: "uppercase", whiteSpace: "pre-line", margin: 0 }}>{design.name}</h1>
         <div style={{ display: "flex", alignItems: "baseline", gap: "14px", margin: "16px 0 12px" }}>
-          <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "30px", fontWeight: 700 }}>{design.priceLabel}</div>
+          <div style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "24px" : "30px", fontWeight: 700 }}>{design.priceLabel}</div>
           <div style={{ fontSize: "12.5px", color: "#6A6A64" }}>stitching only · {design.daysLabel}</div>
         </div>
-        <p style={{ maxWidth: "320px", fontSize: "14px", lineHeight: 1.65, color: "#6A6A64", margin: "0 0 22px", textWrap: "pretty" }}>{design.desc}</p>
+        <p style={{ maxWidth: isDesktop ? "320px" : "520px", fontSize: "14px", lineHeight: 1.65, color: "#6A6A64", margin: "0 0 22px", textWrap: "pretty" }}>{design.desc}</p>
 
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", maxWidth: "100%" }}>
           <div
@@ -34,14 +53,20 @@ export default function DesignDetail() {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: "12px", marginTop: "26px" }}>
+        <div style={{ display: "flex", gap: "12px", marginTop: "26px", flexWrap: "wrap" }}>
           {designThumbs.map((t, i) => (
             <div key={i} onClick={t.onClick} style={t.style} />
           ))}
         </div>
       </section>
 
-      <section style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", minWidth: 0, minHeight: 0 }}>
+      <section
+        style={
+          isDesktop
+            ? { position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", minWidth: 0, minHeight: 0 }
+            : { position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", height: isMobile ? "340px" : "420px", order: -1 }
+        }
+      >
         <div style={designCircleStyle} />
         <div style={{ position: "absolute", top: "17%", left: "15%", animation: "msFloat 4.4s ease-in-out infinite alternate" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D32F4D" strokeWidth="3" strokeLinecap="round">

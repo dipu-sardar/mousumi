@@ -1,6 +1,8 @@
 import { useApp } from "../../context/AppContext.jsx";
+import { useViewport } from "../../hooks/useViewport.js";
 
 export default function Account() {
+  const { isMobile } = useViewport();
   const {
     guest,
     openLogin,
@@ -28,12 +30,12 @@ export default function Account() {
   } = useApp();
 
   return (
-    <div style={{ padding: "48px 56px 90px", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>
+    <div style={{ padding: isMobile ? "28px 18px 70px" : "48px 56px 90px", animation: "msRise 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>
       <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "11px", fontWeight: 800, letterSpacing: "2.6px", color: "#D32F4D" }}>MY ACCOUNT</div>
 
       {guest && (
         <div style={{ maxWidth: "520px", padding: "26px 0 0" }}>
-          <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "48px", fontWeight: 800, letterSpacing: "-1.8px", lineHeight: 1.05, margin: "0 0 14px" }}>
+          <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "32px" : "48px", fontWeight: 800, letterSpacing: "-1.8px", lineHeight: 1.05, margin: "0 0 14px" }}>
             LOG IN WITH
             <br />
             YOUR MOBILE
@@ -55,7 +57,7 @@ export default function Account() {
           <div style={{ display: "flex", alignItems: "flex-start", gap: "26px", flexWrap: "wrap", margin: "14px 0 22px" }}>
             <div style={{ width: "78px", height: "78px", borderRadius: "50%", background: "#E4F0D2", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Outfit,sans-serif", fontSize: "26px", fontWeight: 800, flexShrink: 0 }}>{accountInitials}</div>
             <div style={{ flex: 1, minWidth: "260px" }}>
-              <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: "52px", fontWeight: 800, letterSpacing: "-2px", lineHeight: 1, margin: 0 }}>{accountName}</h2>
+              <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: isMobile ? "32px" : "52px", fontWeight: 800, letterSpacing: "-2px", lineHeight: 1, margin: 0 }}>{accountName}</h2>
               <div style={{ fontSize: "13px", color: "#9A9A92", marginTop: "10px" }}>{accountJoined}</div>
             </div>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
@@ -68,7 +70,7 @@ export default function Account() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.4fr) minmax(0,1fr)", gap: "22px", marginBottom: "38px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "minmax(0,1.4fr) minmax(0,1fr)", gap: "22px", marginBottom: "38px" }}>
             <div style={{ background: "#FFFFFF", border: "1px solid #EDEDE6", borderRadius: "24px", padding: "26px" }}>
               <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.8px", color: "#9A9A92", marginBottom: "18px" }}>ACCOUNT DETAILS</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: "12px 28px" }}>
@@ -90,7 +92,7 @@ export default function Account() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,340px)", gap: "44px", alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "minmax(0,1fr) minmax(0,340px)", gap: isMobile ? "26px" : "44px", alignItems: "start" }}>
             <div>
               <div style={{ fontFamily: "Outfit,sans-serif", fontSize: "10.5px", fontWeight: 800, letterSpacing: "1.6px", color: "#9A9A92", marginBottom: "14px" }}>ORDERS</div>
               {noOrders && (
@@ -104,7 +106,7 @@ export default function Account() {
               {hasOrders && (
                 <div style={{ borderTop: "1px solid #E8E8E2" }}>
                   {myOrders.map((o) => (
-                    <div key={o.id} onClick={o.track} className="hv-fade-75" style={{ display: "flex", alignItems: "center", gap: "20px", padding: "20px 0", borderBottom: "1px solid #EFEFE9", cursor: "pointer" }}>
+                    <div key={o.id} onClick={o.track} className="hv-fade-75" style={{ display: "flex", alignItems: "center", gap: "20px", padding: "20px 0", borderBottom: "1px solid #EFEFE9", cursor: "pointer", flexWrap: "wrap" }}>
                       <div style={{ width: "76px", height: "96px", borderRadius: "14px", overflow: "hidden", background: "#EFEFE9", flexShrink: 0 }}>
                         <div role="img" aria-label="Order" style={o.photoStyle} />
                       </div>
